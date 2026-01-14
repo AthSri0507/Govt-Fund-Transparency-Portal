@@ -173,6 +173,72 @@ router.get('/:id/timeline', async (req, res) => {
   }
 });
 
+// GET /projects/:id/sentiment-summary - returns aggregated sentiment for project
+router.get('/:id/sentiment-summary', async (req, res) => {
+  const projectId = req.params.id;
+  try {
+    const rows = await db.query('SELECT sentiment_summary_cached FROM comments WHERE project_id = ? AND sentiment_summary_cached IS NOT NULL', [projectId]);
+    const scores = [];
+    for (const r of rows) {
+      let s = r.sentiment_summary_cached;
+      if (!s) continue;
+      if (typeof s === 'string') {
+        try { s = JSON.parse(s); } catch (e) { continue; }
+      }
+      if (s && typeof s.score === 'number') scores.push(s.score);
+    }
+    if (scores.length === 0) return res.json({ data: { count: 0, average: null, min: null, max: null, summary_text: 'No processed comments yet.' } });
+    const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+    const min = Math.min(...scores);
+    const max = Math.max(...scores);
+
+    // Also compute simple label counts and top tokens for a human-friendly summary
+    const counts = { positive: 0, neutral: 0, negative: 0 };
+    const tokenFreq = Object.create(null);
+    for (const r of rows) {
+      let s = r.sentiment_summary_cached;
+      if (!s) continue;
+      if (typeof s === 'string') {
+        try { s = JSON.parse(s); } catch (e) { continue; }
+      }
+      if (!s || typeof s.score !== 'number') continue;
+      const sc = s.score;
+      if (sc > 0) counts.positive++;
+      else if (sc < 0) counts.negative++;
+      else counts.neutral++;
+      if (Array.isArray(s.tokens)) {
+        for (const t of s.tokens) {
+          if (!t || typeof t !== 'string') continue;
+          const tok = t.toLowerCase();
+          tokenFreq[tok] = (tokenFreq[tok] || 0) + 1;
+        }
+      }
+    }
+
+    // derive top tokens (simple, exclude very short tokens)
+    const topTokens = Object.entries(tokenFreq)
+      .filter(([t]) => t.length > 2)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([t]) => t);
+
+    // Build a concise human-friendly sentence
+    const total = counts.positive + counts.neutral + counts.negative;
+    let predominant = 'neutral';
+    if (counts.positive > counts.neutral && counts.positive >= counts.negative) predominant = 'positive';
+    if (counts.negative > counts.neutral && counts.negative > counts.positive) predominant = 'negative';
+    const pct = (counts[predominant] / total * 100).toFixed(0);
+    const avgRounded = Math.round(avg * 100) / 100;
+    let summary_text = `${pct}% ${predominant} comments (avg score ${avgRounded}).`;
+    if (topTokens.length) summary_text += ` Common words: ${topTokens.slice(0,3).join(', ')}.`;
+
+    return res.json({ data: { count: scores.length, average: avg, min, max, counts, topTokens, summary_text } });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // PATCH /projects/:id - update
 router.patch('/:id', requireAuth, requireRole('official', 'admin'), validateBody(projectUpdateSchema), async (req, res) => {
   const id = req.params.id;

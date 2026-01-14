@@ -34,8 +34,11 @@ async function run() {
     await conn.end();
   }
 }
+module.exports = run;
 
-run().catch(err => {
-  console.error('Seed error:', err);
-  process.exit(1);
-});
+if (require.main === module) {
+  run().catch(err => {
+    console.error('Seed error:', err);
+    process.exit(1);
+  });
+}

@@ -23,15 +23,27 @@ async function run() {
     for (const f of files) {
       const sql = fs.readFileSync(path.join(dir, f), 'utf8');
       console.log('Running', f);
-      await conn.query(sql);
+      try {
+        await conn.query(sql);
+      } catch (err) {
+        // Ignore duplicate-index or duplicate-column errors to make migrations idempotent when re-run
+        if (err && (err.code === 'ER_DUP_KEYNAME' || err.code === 'ER_DUP_FIELDNAME')) {
+          console.log('Warning: duplicate schema object detected, skipping.', err.message);
+        } else {
+          throw err;
+        }
+      }
     }
     console.log('Migrations complete');
   } finally {
     await conn.end();
   }
 }
+module.exports = run;
 
-run().catch(err => {
-  console.error('Migration error:', err);
-  process.exit(1);
-});
+if (require.main === module) {
+  run().catch(err => {
+    console.error('Migration error:', err);
+    process.exit(1);
+  });
+}
