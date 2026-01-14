@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS projects (
   region VARCHAR(100),
   state VARCHAR(100),
   city VARCHAR(100),
+  area VARCHAR(255),
   latitude DECIMAL(10,7),
   longitude DECIMAL(10,7),
   budget_total DECIMAL(18,2) NOT NULL DEFAULT 0,

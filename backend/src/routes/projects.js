@@ -1,38 +1,50 @@
 const express = require('express');
 const db = require('../db_mysql');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth, requireRole, verify } = require('../middleware/auth');
 const { validateBody, validateParams, Joi } = require('../middleware/validate');
 
 const router = express.Router();
 
 const projectCreateSchema = Joi.object({
   name: Joi.string().max(255).required(),
-  department: Joi.string().max(100).allow('', null),
-  region: Joi.string().max(100).allow('', null),
-  state: Joi.string().max(100).allow('', null),
-  city: Joi.string().max(100).allow('', null),
+  department: Joi.string().max(100).required(),
+  state: Joi.string().max(100).required(),
+  city: Joi.string().max(100).required(),
+  area: Joi.string().max(255).allow('', null),
   latitude: Joi.number().precision(7).optional(),
   longitude: Joi.number().precision(7).optional(),
   budget_total: Joi.number().precision(2).min(0).required(),
   status: Joi.string().max(50).optional(),
   start_date: Joi.date().optional(),
   end_date: Joi.date().optional(),
-  description: Joi.string().allow('', null)
+  description: Joi.string().allow('', null),
+  contractor_name: Joi.string().max(255).allow('', null).optional(),
+  contractor_company: Joi.string().max(255).allow('', null).optional(),
+  contractor_contact: Joi.string().max(255).allow('', null).optional(),
+  contractor_registration_id: Joi.string().max(255).allow('', null).optional(),
+  contract_start_date: Joi.date().optional(),
+  contract_end_date: Joi.date().optional()
 });
 
 const projectUpdateSchema = Joi.object({
   name: Joi.string().max(255).optional(),
   department: Joi.string().max(100).optional(),
-  region: Joi.string().max(100).optional(),
   state: Joi.string().max(100).optional(),
   city: Joi.string().max(100).optional(),
+  area: Joi.string().max(255).allow('', null).optional(),
   latitude: Joi.number().precision(7).optional(),
   longitude: Joi.number().precision(7).optional(),
   budget_total: Joi.number().precision(2).min(0).optional(),
   status: Joi.string().max(50).optional(),
   start_date: Joi.date().optional(),
   end_date: Joi.date().optional(),
-  description: Joi.string().allow('', null)
+  description: Joi.string().allow('', null),
+  contractor_name: Joi.string().max(255).allow('', null).optional(),
+  contractor_company: Joi.string().max(255).allow('', null).optional(),
+  contractor_contact: Joi.string().max(255).allow('', null).optional(),
+  contractor_registration_id: Joi.string().max(255).allow('', null).optional(),
+  contract_start_date: Joi.date().optional(),
+  contract_end_date: Joi.date().optional()
 });
 
 const fundSchema = Joi.object({
@@ -50,12 +62,42 @@ const updateSchema = Joi.object({
 });
 
 // GET /projects - list (simple)
+// GET /projects - list (aggregated for listing)
+// Returns basic project info plus budget_used and avg_rating for citizen listing and filters
 router.get('/', async (req, res) => {
   try {
-    const rows = await db.query('SELECT * FROM projects ORDER BY id DESC LIMIT 100');
+    const sql = `
+      SELECT p.*,
+        (SELECT COALESCE(SUM(amount),0) FROM fund_transaction WHERE project_id = p.id) AS budget_used,
+        (SELECT AVG(rating) FROM comments WHERE project_id = p.id AND rating IS NOT NULL) AS avg_rating
+      FROM projects p
+      WHERE COALESCE(p.is_deleted,0) = 0
+      ORDER BY p.id DESC
+      LIMIT 100
+    `;
+    const rows = await db.query(sql);
+    // normalize numeric types
+    const data = (rows || []).map(r => ({
+      ...r,
+      budget_total: r.budget_total !== undefined && r.budget_total !== null ? Number(r.budget_total) : null,
+      budget_used: r.budget_used ? Number(r.budget_used) : 0,
+      avg_rating: r.avg_rating !== null ? Number(r.avg_rating) : null
+    }));
+    return res.json({ data });
+  } catch (err) {
+    console.error('projects list error', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET /projects/status-distribution - returns counts per status (for dashboards)
+// Public endpoint so citizens, officials and admins can view project status distribution
+router.get('/status-distribution', async (req, res) => {
+  try {
+    const rows = await db.query('SELECT status, COUNT(*) AS count FROM projects GROUP BY status');
     return res.json({ data: rows });
   } catch (err) {
-    console.error(err);
+    console.error('status-distribution error', err);
     return res.status(500).json({ message: 'Server error' });
   }
 });
@@ -64,9 +106,38 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   const id = req.params.id;
   try {
-    const rows = await db.query('SELECT * FROM projects WHERE id = ?', [id]);
+    // Allow admins/officials to view soft-deleted projects when a valid token is provided.
+    let allowDeleted = false;
+    try {
+      const auth = req.headers.authorization || '';
+      if (auth && auth.startsWith('Bearer ')) {
+        const token = auth.slice(7);
+        const payload = verify(token);
+        if (payload && payload.role && ['admin', 'official'].includes(String(payload.role).toLowerCase())) {
+          allowDeleted = true;
+          req.user = payload;
+        }
+      }
+    } catch (e) {
+      // ignore token verification errors and treat request as unauthenticated
+      allowDeleted = false;
+    }
+
+    // return project with computed budget_used (sum of fund transactions)
+    const rows = await db.query(
+      `SELECT p.*,
+         (SELECT COALESCE(SUM(amount),0) FROM fund_transaction WHERE project_id = p.id) AS budget_used,
+         (SELECT AVG(rating) FROM comments WHERE project_id = p.id AND rating IS NOT NULL) AS avg_rating
+       FROM projects p
+       WHERE p.id = ? ${allowDeleted ? '' : 'AND COALESCE(p.is_deleted,0) = 0'}`,
+      [id]
+    );
     const project = rows && rows[0];
     if (!project) return res.status(404).json({ message: 'Not found' });
+    // ensure numeric values are numbers
+    if (project.budget_total !== undefined && project.budget_total !== null) project.budget_total = Number(project.budget_total);
+    project.budget_used = project.budget_used ? Number(project.budget_used) : 0;
+    project.avg_rating = project.avg_rating !== null && project.avg_rating !== undefined ? Number(project.avg_rating) : null;
     return res.json({ data: project });
   } catch (err) {
     console.error(err);
@@ -82,20 +153,26 @@ router.post('/', requireAuth, requireRole('official', 'admin'), validateBody(pro
     const createdBy = (req.user && (req.user.id ?? req.user.user?.id ?? req.user.sub)) || null;
     console.log('Creating project - req.user =', req.user, 'createdBy =', createdBy);
     const result = await db.query(
-      'INSERT INTO projects (name, department, region, state, city, latitude, longitude, budget_total, status, start_date, end_date, description, created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)',
+      'INSERT INTO projects (name, department, state, city, area, latitude, longitude, budget_total, status, start_date, end_date, description, contractor_name, contractor_company, contractor_contact, contractor_registration_id, contract_start_date, contract_end_date, created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
       [
         p.name,
-        p.department ?? null,
-        p.region ?? null,
-        p.state ?? null,
-        p.city ?? null,
+        p.department,
+        p.state,
+        p.city,
+        p.area ?? null,
         p.latitude ?? null,
         p.longitude ?? null,
         p.budget_total,
-        p.status ?? null,
+        p.status ?? 'Active',
         p.start_date ?? null,
         p.end_date ?? null,
         p.description ?? null,
+        p.contractor_name ?? null,
+        p.contractor_company ?? null,
+        p.contractor_contact ?? null,
+        p.contractor_registration_id ?? null,
+        p.contract_start_date ?? null,
+        p.contract_end_date ?? null,
         createdBy
       ]
     );
@@ -153,6 +230,18 @@ router.post('/:id/comments', requireAuth, requireRole('Citizen'), validateBody(c
     return res.status(201).json({ data: comment });
   } catch (err) {
     console.error(err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET /projects/:id/comments - list comments for a project
+router.get('/:id/comments', async (req, res) => {
+  const projectId = req.params.id;
+  try {
+    const rows = await db.query('SELECT * FROM comments WHERE project_id = ? ORDER BY id DESC', [projectId]);
+    return res.json({ data: rows });
+  } catch (err) {
+    console.error('projects/comments list error', err);
     return res.status(500).json({ message: 'Server error' });
   }
 });
@@ -239,6 +328,31 @@ router.get('/:id/sentiment-summary', async (req, res) => {
   }
 });
 
+// GET /projects/:id/budget-timeseries - returns daily sums and cumulative used amounts
+// Public: allow citizens and unauthenticated viewers to see budget timeline for transparency
+router.get('/:id/budget-timeseries', async (req, res) => {
+  const projectId = req.params.id;
+  try {
+    const rows = await db.query(
+      `SELECT DATE(created_at) AS date, COALESCE(SUM(amount),0) AS amount
+       FROM fund_transaction
+       WHERE project_id = ?
+       GROUP BY DATE(created_at)
+       ORDER BY DATE(created_at) ASC`,
+      [projectId]
+    );
+    let cum = 0;
+    const data = (rows || []).map(r => {
+      const amt = Number(r.amount || 0);
+      cum += amt;
+      return { date: r.date, amount: amt, cumulative: cum };
+    });
+    return res.json({ data });
+  } catch (err) {
+    console.error('budget-timeseries error', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
 // PATCH /projects/:id - update
 router.patch('/:id', requireAuth, requireRole('official', 'admin'), validateBody(projectUpdateSchema), async (req, res) => {
   const id = req.params.id;
@@ -257,6 +371,50 @@ router.patch('/:id', requireAuth, requireRole('official', 'admin'), validateBody
     return res.json({ data: rows && rows[0] });
   } catch (err) {
     console.error(err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// POST /projects/:id/disable - soft-delete a project (officials/admins)
+router.post('/:id/disable', requireAuth, requireRole('official', 'admin'), async (req, res) => {
+  const id = req.params.id;
+  try {
+    await db.query('UPDATE projects SET is_deleted = 1, status = ? WHERE id = ?', ['Disabled', id]);
+    await db.query('INSERT INTO audit_log (entity_type, entity_id, action, details, actor_id) VALUES (?,?,?,?,?)', ['project', id, 'disable', JSON.stringify({ reason: 'soft-delete by admin' }), req.user.id]);
+    const rows = await db.query('SELECT * FROM projects WHERE id = ?', [id]);
+    return res.json({ data: rows && rows[0] });
+  } catch (err) {
+    console.error('projects disable error', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// POST /projects/:id/restore - undo soft-delete (officials/admins)
+router.post('/:id/restore', requireAuth, requireRole('official', 'admin'), async (req, res) => {
+  const id = req.params.id;
+  try {
+    await db.query('UPDATE projects SET is_deleted = 0, status = ? WHERE id = ?', ['Active', id]);
+    await db.query('INSERT INTO audit_log (entity_type, entity_id, action, details, actor_id) VALUES (?,?,?,?,?)', ['project', id, 'restore', JSON.stringify({ reason: 'restore by admin' }), req.user.id]);
+    const rows = await db.query('SELECT * FROM projects WHERE id = ?', [id]);
+    return res.json({ data: rows && rows[0] });
+  } catch (err) {
+    console.error('projects restore error', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// PUT /projects/:id/status - change project status (officials/admins)
+router.put('/:id/status', requireAuth, requireRole('official', 'admin'), async (req, res) => {
+  const id = req.params.id;
+  const { status } = req.body || {};
+  const allowed = ['Active', 'Halted', 'Cancelled'];
+  if (!status || !allowed.includes(status)) return res.status(400).json({ message: 'Invalid status' });
+  try {
+    await db.query('UPDATE projects SET status = ? WHERE id = ?', [status, id]);
+    const rows = await db.query('SELECT * FROM projects WHERE id = ?', [id]);
+    return res.json({ data: rows && rows[0] });
+  } catch (err) {
+    console.error('projects status update error', err);
     return res.status(500).json({ message: 'Server error' });
   }
 });
