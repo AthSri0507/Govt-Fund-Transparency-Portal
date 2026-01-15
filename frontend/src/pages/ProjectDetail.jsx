@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { useParams } from 'react-router-dom'
-import { getToken, getUser } from '../utils/auth'
+import { getToken, getUser, setUserScopedItem, getUserScopedItem } from '../utils/auth'
 import ProjectMap from '../components/ProjectMap'
 // Removed duplicate import of React
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend } from 'chart.js'
@@ -92,11 +92,12 @@ function BudgetSpendChart({ projectId }) {
   )
 }
 
-export default function ProjectDetail() {
+export default function ProjectDetail({ initialOpenTimeline = false }) {
   const { id } = useParams()
   const [project, setProject] = useState(null)
   const [comments, setComments] = useState([])
   const [timeline, setTimeline] = useState([])
+  const [timelineOpen, setTimelineOpen] = useState(initialOpenTimeline)
   const [summary, setSummary] = useState(null)
   const [text, setText] = useState('')
   const [rating, setRating] = useState(5)
@@ -118,16 +119,16 @@ export default function ProjectDetail() {
         setProject(pRes.data && pRes.data.data ? pRes.data.data : pRes.data)
         setComments(cRes.data && cRes.data.data ? cRes.data.data : cRes.data || [])
         setSummary(sRes && sRes.data && sRes.data.data ? sRes.data.data : sRes.data)
-        setTimeline(tRes && tRes.data ? tRes.data : [])
+        // filter out comments from the merged timeline (only show updates and fund transactions)
+        setTimeline((tRes && tRes.data && tRes.data.data ? tRes.data.data : (Array.isArray(tRes && tRes.data) ? tRes.data : [])).filter(i => i && i.type !== 'comment'))
         // add to recently viewed (most recent first, unique, keep 3)
         try {
-          const key = 'recent_projects'
-          const cur = JSON.parse(localStorage.getItem(key) || '[]')
+          const cur = JSON.parse(getUserScopedItem('recent_projects') || '[]')
           const entry = { id: pRes.data.data.id, name: pRes.data.data.name }
           const filtered = cur.filter(x=>x.id !== entry.id)
           filtered.unshift(entry)
           const top = filtered.slice(0,5)
-          localStorage.setItem(key, JSON.stringify(top))
+          setUserScopedItem('recent_projects', JSON.stringify(top))
         } catch (e) {}
       } catch (e) {
         setErr(e.response?.data?.message || e.message)
@@ -157,7 +158,8 @@ export default function ProjectDetail() {
           axios.get(`/api/projects/${id}/timeline`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] }))
         ])
         if (pRef && pRef.data && pRef.data.data) setProject(pRef.data.data)
-        if (tRef && tRef.data) setTimeline(tRef.data)
+        if (tRef && tRef.data && tRef.data.data) setTimeline((tRef.data.data || []).filter(i => i && i.type !== 'comment'))
+        else if (tRef && Array.isArray(tRef.data)) setTimeline((tRef.data || []).filter(i => i && i.type !== 'comment'))
       } catch (e) {
         // non-fatal
       }
@@ -286,28 +288,68 @@ export default function ProjectDetail() {
               <ProjectMap projects={[project]} single={true} />
             </div>
           )}
-          <div style={{ marginTop: 20, padding: 12, border: '1px solid #ddd', borderRadius: 8, background: '#fff' }}>
-            <h3 style={{ marginTop: 0 }}>Timeline</h3>
-            {timeline && timeline.length ? (
-              <ul>
-                {timeline.map(item => (
-                  <li key={`${item.type}-${item.id}`} style={{ marginBottom: 8 }}>
-                    <div>
-                      {item.type === 'fund_transaction' && <strong style={{ color: '#2e7d32' }}>Fund:</strong>}
-                      {item.type === 'project_update' && <strong style={{ color: '#1976d2' }}>Update:</strong>}
-                      {item.type === 'comment' && <strong style={{ color: '#ef6c00' }}>Comment:</strong>}
-                      {' '}
-                      {item.type === 'fund_transaction' && <span>₹{item.amount} — {item.purpose}</span>}
-                      {item.type === 'project_update' && <span>{item.update_text || item.text}</span>}
-                      {item.type === 'comment' && <span>{item.text}</span>}
-                      <div style={{ fontSize: 12, color: '#666' }}>{new Date(item.occurred_at || item.created_at).toLocaleString()}</div>
+          <div style={{ marginTop: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, border: '1px solid #ddd', borderRadius: 8, background: '#fff' }}>
+              <h3 style={{ margin: 0 }}>Timeline</h3>
+              <div>
+                <button onClick={() => setTimelineOpen(o => !o)} style={{ padding: '6px 10px' }}>{timelineOpen ? 'Hide' : 'Show'} timeline</button>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 8 }}>
+              {!timeline || timeline.length === 0 ? (
+                <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8, background: '#fff' }}>No timeline events yet.</div>
+              ) : (
+                <div style={{ padding: 0 }}>
+                  {/* If closed, show compact preview with most recent event */}
+                  {!timelineOpen && (
+                    <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8, background: '#fff', display: 'flex', alignItems: 'center', gap: 12 }}>
+                      {(() => {
+                        const item = timeline[0]
+                        const color = item.type === 'fund_transaction' ? '#2e7d32' : item.type === 'project_update' ? '#1976d2' : item.type === 'comment' ? '#ef6c00' : '#9e9e9e'
+                        return (
+                          <>
+                            <div style={{ width: 14, height: 14, borderRadius: 7, background: color }} />
+                            <div style={{ fontSize: 13 }}>
+                              <div style={{ fontWeight: 600 }}>{item.type === 'project_update' ? 'Update' : item.type === 'fund_transaction' ? 'Fund' : 'Comment'}</div>
+                              <div style={{ color: '#444' }}>{item.type === 'fund_transaction' ? `₹${item.amount} — ${item.purpose}` : item.type === 'project_update' ? (item.update_text || item.text) : item.text}</div>
+                              <div style={{ fontSize: 12, color: '#666' }}>{new Date(item.occurred_at || item.created_at).toLocaleString()}</div>
+                            </div>
+                          </>
+                        )
+                      })()}
                     </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div>No timeline events yet.</div>
-            )}
+                  )}
+
+                  {/* Expanded timeline */}
+                  {timelineOpen && (
+                    <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8, background: '#fff' }}>
+                      <ul style={{ listStyle: 'none', paddingLeft: 0, margin: 0 }}>
+                        {timeline.map(item => {
+                          const color = item.type === 'fund_transaction' ? '#2e7d32' : item.type === 'project_update' ? '#1976d2' : item.type === 'comment' ? '#ef6c00' : '#9e9e9e'
+                          return (
+                            <li key={`${item.type}-${item.id}`} style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+                              <div style={{ width: 18, display: 'flex', justifyContent: 'center' }}>
+                                <div style={{ width: 12, height: 12, borderRadius: 6, background: color, marginTop: 6 }} />
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                                  <div>
+                                    <div style={{ fontWeight: 600, marginBottom: 4 }}>{item.type === 'project_update' ? 'Official update' : item.type === 'fund_transaction' ? 'Fund transaction' : 'Comment'}</div>
+                                    <div style={{ color: '#222' }}>{item.type === 'fund_transaction' ? `₹${item.amount} — ${item.purpose}` : item.type === 'project_update' ? (item.update_text || item.text) : item.text}</div>
+                                  </div>
+                                  <div style={{ fontSize: 12, color: '#666', minWidth: 150, textAlign: 'right' }}>{new Date(item.occurred_at || item.created_at).toLocaleString()}</div>
+                                </div>
+                              </div>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -401,10 +443,17 @@ function renderStars(n) {
 function FollowButton({ projectId }){
   const [followed, setFollowed] = useState(false)
   const [saving, setSaving] = useState(false)
+  const user = getUser()
+
+  // Hide follow button for Officials and Admins
+  if (user && user.role) {
+    const r = String(user.role).toLowerCase()
+    if (r === 'official' || r === 'admin') return null
+  }
 
   useEffect(()=>{
     try{
-      const f = JSON.parse(localStorage.getItem('followed_projects') || '[]')
+      const f = JSON.parse(getUserScopedItem('followed_projects') || '[]')
       setFollowed(f.includes(projectId))
     }catch(e){ setFollowed(false) }
   }, [projectId])
@@ -412,13 +461,12 @@ function FollowButton({ projectId }){
   async function toggle(){
     setSaving(true)
     try{
-      const key = 'followed_projects'
-      const cur = JSON.parse(localStorage.getItem(key) || '[]')
+      const cur = JSON.parse(getUserScopedItem('followed_projects') || '[]')
       const s = new Set(cur)
       if (s.has(projectId)) s.delete(projectId)
       else s.add(projectId)
       const arr = Array.from(s)
-      localStorage.setItem(key, JSON.stringify(arr))
+      setUserScopedItem('followed_projects', JSON.stringify(arr))
       setFollowed(s.has(projectId))
     }catch(e){ console.error(e) }
     setSaving(false)

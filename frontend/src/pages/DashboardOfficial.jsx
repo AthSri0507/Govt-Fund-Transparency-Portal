@@ -80,7 +80,7 @@ export default function DashboardOfficial() {
   async function addUpdate(projectId, text, setLocalErr, onDone) {
     try {
       const token = getToken()
-      await axios.post(`/api/projects/${projectId}/updates`, { text }, { headers: { Authorization: `Bearer ${token}` } })
+      await axios.post(`/api/projects/${projectId}/updates`, { update_text: text }, { headers: { Authorization: `Bearer ${token}` } })
       if (onDone) onDone()
     } catch (e) {
       setLocalErr(e.response?.data?.message || e.message)

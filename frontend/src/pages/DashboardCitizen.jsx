@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { getToken, getUser } from '../utils/auth'
+import { getToken, getUser, getUserScopedItem } from '../utils/auth'
 
 export default function DashboardCitizen(){
   const user = getUser()
@@ -12,7 +12,7 @@ export default function DashboardCitizen(){
   useEffect(()=>{
     // load followed ids from localStorage and fetch their details
     try{
-      const ids = JSON.parse(localStorage.getItem('followed_projects') || '[]')
+      const ids = JSON.parse(getUserScopedItem('followed_projects') || '[]')
       if (ids && ids.length){
         const token = getToken()
         Promise.all(ids.map(id => axios.get(`/api/projects/${id}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} }).then(r => r.data.data).catch(()=>null)))
@@ -20,7 +20,7 @@ export default function DashboardCitizen(){
       }
     }catch(e){}
     try{
-      const rec = JSON.parse(localStorage.getItem('recent_projects') || '[]')
+      const rec = JSON.parse(getUserScopedItem('recent_projects') || '[]')
       setRecent(rec)
     }catch(e){}
   }, [])

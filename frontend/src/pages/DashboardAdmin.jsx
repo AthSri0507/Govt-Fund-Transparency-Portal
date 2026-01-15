@@ -24,6 +24,10 @@ export default function DashboardAdmin(){
     }
   }
 
+  // load a small list of flagged projects for quick card
+  const [flagged, setFlagged] = useState(null)
+  useEffect(()=>{ (async function(){ try{ const token = getToken(); const r = await axios.get('/api/admin/projects/flagged?limit=5', { headers: { Authorization: `Bearer ${token}` } }); setFlagged(r.data?.data || []); }catch(e){ setFlagged([]) } })() }, [])
+
   return (
     <div>
       <h2>Admin Dashboard</h2>
@@ -52,6 +56,9 @@ export default function DashboardAdmin(){
           </Link>
           <Link to="/admin/funds" style={{ textDecoration: 'none', color: 'inherit' }}>
             <div style={{ padding: 12, border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer' }}>Fund transactions<br/><strong>{typeof stats.total_fund_transactions !== 'undefined' ? stats.total_fund_transactions : '-'}</strong></div>
+          </Link>
+          <Link to="/dashboard/admin/flagged" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <div style={{ padding: 12, border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer' }}>Flagged Projects<br/><strong>{flagged ? flagged.length : '-'}</strong></div>
           </Link>
           <Link to="/users?status=Disabled" style={{ textDecoration: 'none', color: 'inherit' }}>
             <div style={{ padding: 12, border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer' }}>Disabled users<br/><strong>{typeof stats.disabled_users !== 'undefined' ? stats.disabled_users : '-'}</strong></div>

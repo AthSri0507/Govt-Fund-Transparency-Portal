@@ -28,24 +28,23 @@ export default function AdminLayout({ children }) {
           flexWrap: 'nowrap'
         }}
       >
-        <Link
-          to="/dashboard/admin"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            textDecoration: 'none',
-            color: 'inherit'
-          }}
-        >
-          <img src={logo} alt="Logo" style={{ width: 95, height: 85 }} />
+        <a href="#" onClick={(e)=>{ e.preventDefault();
+            if (user && user.role) {
+              const r = String(user.role).toLowerCase()
+              if (r === 'official') return navigate('/dashboard/official')
+              if (r === 'admin') return navigate('/dashboard/admin')
+              return navigate('/dashboard/citizen')
+            }
+            navigate('/')
+          }} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit' }}>
+          <img src={logo} alt="Logo" style={{ width: 95, height: 65 }} />
           <div>
-            <div style={{ fontSize: 18, fontWeight: 400 }}>
+            <div style={{ fontSize: 24, fontWeight: 400 }}>
               Government Fund Transparency Portal
             </div>
             <div style={{ fontSize: 12, color: '#777' }}>Admin Console</div>
           </div>
-        </Link>
+        </a>
 
         <div
           className="admin-header-utilities"
@@ -82,6 +81,7 @@ export default function AdminLayout({ children }) {
           <nav style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <Link to="/dashboard/admin">Dashboard</Link>
             <Link to="/dashboard/admin/projects">Projects</Link>
+            <Link to="/dashboard/admin/flagged">Flagged Projects</Link>
             <Link to="/users">Users</Link>
             <Link to="/admin/audit-logs">Audit Logs</Link>
             <Link to="/admin/funds">Transactions</Link>
@@ -94,8 +94,8 @@ export default function AdminLayout({ children }) {
         </main>
       </div>
 
-      <footer className="admin-footer" style={{ padding: 12, borderTop: '1px solid #eee', textAlign: 'center', fontSize: 12, color: '#666' }}>
-        Team • College • 2026
+      <footer className="admin-footer" style={{ padding: 12, borderTop: '1px solid #eee', textAlign: 'center', fontSize: 16, color: '#666' }}>
+        Atharva Srivastava
       </footer>
     </div>
   )

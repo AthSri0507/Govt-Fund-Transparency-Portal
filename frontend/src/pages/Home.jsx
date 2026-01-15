@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { Link, useLocation } from 'react-router-dom'
-import { getToken, getUser } from '../utils/auth'
+import { getToken, getUser, getUserScopedItem, setUserScopedItem } from '../utils/auth'
 import ProjectMap from '../components/ProjectMap'
 
 export default function Home() {
@@ -46,9 +46,9 @@ export default function Home() {
         }
       })
       .catch(e => setErr(e.response?.data?.message || e.message))
-    // load followed from localStorage
+    // load followed from localStorage (user-scoped)
     try {
-      const f = JSON.parse(localStorage.getItem('followed_projects') || '[]')
+      const f = JSON.parse(getUserScopedItem('followed_projects') || '[]')
       setFollowed(new Set(f))
     } catch (e) {}
   }, [location.search])
@@ -59,7 +59,7 @@ export default function Home() {
     if (s.has(projectId)) s.delete(projectId)
     else s.add(projectId)
     setFollowed(new Set(s))
-    try { localStorage.setItem('followed_projects', JSON.stringify(Array.from(s))) } catch (e) {}
+    try { setUserScopedItem('followed_projects', JSON.stringify(Array.from(s))) } catch (e) {}
   }
 
   return (
@@ -108,7 +108,7 @@ export default function Home() {
               if (filters.status && (p.status || '') !== filters.status) return false
               // support URL filters: followed and mycomments
               if (urlFilter === 'followed') {
-                const f = JSON.parse(localStorage.getItem('followed_projects') || '[]')
+                const f = JSON.parse(getUserScopedItem('followed_projects') || '[]')
                 if (!f.includes(p.id)) return false
               }
               if (urlFilter === 'mycomments') {
@@ -134,7 +134,9 @@ export default function Home() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
-                  <button onClick={() => toggleFollow(p.id)} style={{ fontSize: 18 }} title="Follow project">{followed.has(p.id) ? '★' : '☆'}</button>
+                  {!(user && user.role && (String(user.role).toLowerCase() === 'official' || String(user.role).toLowerCase() === 'admin')) && (
+                    <button onClick={() => toggleFollow(p.id)} style={{ fontSize: 18 }} title="Follow project">{followed.has(p.id) ? '★' : '☆'}</button>
+                  )}
                   <Link to={`/projects/${p.id}`}><button>View</button></Link>
                 </div>
               </div>

@@ -1,10 +1,12 @@
 import React from 'react'
 import { Routes, Route, Link, Navigate, useLocation } from 'react-router-dom'
+import siteLogo from './assets/logo.png'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Landing from './pages/Landing'
 import Home from './pages/Home'
 import ProjectDetail from './pages/ProjectDetail'
+import ProjectTimeline from './pages/ProjectTimeline'
 import DashboardCitizen from './pages/DashboardCitizen'
 import MyComments from './pages/MyComments'
 import OfficialHome from './pages/OfficialHome'
@@ -16,6 +18,7 @@ import AuditLogs from './pages/AuditLogs'
 import FundTransactions from './pages/FundTransactions'
 import AdminDeletedProjects from './pages/AdminDeletedProjects'
 import AdminProjects from './pages/AdminProjects'
+import AdminFlaggedProjects from './pages/AdminFlaggedProjects'
 import AdminLayout from './layouts/AdminLayout'
 import { getToken, getUser, clearAll } from './utils/auth'
 import { useNavigate } from 'react-router-dom'
@@ -44,11 +47,26 @@ export default function App() {
   return (
     <div>
       {!isAdminRoute && (
-        <header style={{ padding: 12, borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            {/* Top navigation removed: sidebar provides admin links now */}
+        <header style={{ padding: 10, borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <a href="#" onClick={(e)=>{ e.preventDefault();
+                if (user && user.role) {
+                  const r = String(user.role).toLowerCase()
+                  if (r === 'official') return navigate('/dashboard/official')
+                  if (r === 'admin') return navigate('/dashboard/admin')
+                  return navigate('/dashboard/citizen')
+                }
+                navigate('/')
+              }} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit' }}>
+              <img src={siteLogo} alt="College Logo" style={{ width: 95, height: 65 }} />
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 600 }}>Government Fund Transparency Portal</div>
+                <div style={{ fontSize: 12, color: '#666' }}>Citizen Portal</div>
+              </div>
+            </a>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            
             {user ? (
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <div style={{ marginRight: 12 }}>
@@ -87,6 +105,7 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/projects" element={<Protected><Home /></Protected>} />
           <Route path="/projects/:id" element={<Protected><ProjectDetail /></Protected>} />
+          <Route path="/projects/:id/timeline" element={<Protected><ProjectTimeline /></Protected>} />
           <Route path="/dashboard/citizen" element={<Protected allowedRoles={["Citizen"]}><DashboardCitizen /></Protected>} />
           <Route path="/citizen/projects" element={<Protected allowedRoles={["Citizen"]}><Home /></Protected>} />
           <Route path="/citizen/comments" element={<Protected allowedRoles={["Citizen"]}><MyComments /></Protected>} />
@@ -95,6 +114,7 @@ export default function App() {
           <Route path="/dashboard/official/projects" element={<Protected allowedRoles={["Official"]}><ManageProjects /></Protected>} />
           <Route path="/dashboard/admin" element={<Protected allowedRoles={["Admin"]}><AdminLayout><DashboardAdmin /></AdminLayout></Protected>} />
           <Route path="/dashboard/admin/projects" element={<Protected allowedRoles={["Admin"]}><AdminLayout><AdminProjects /></AdminLayout></Protected>} />
+          <Route path="/dashboard/admin/flagged" element={<Protected allowedRoles={["Admin"]}><AdminLayout><AdminFlaggedProjects /></AdminLayout></Protected>} />
           <Route path="/users" element={<Protected allowedRoles={["Admin"]}><AdminLayout><UsersAdmin /></AdminLayout></Protected>} />
           <Route path="/admin/audit-logs" element={<Protected allowedRoles={["Admin"]}><AdminLayout><AuditLogs /></AdminLayout></Protected>} />
           <Route path="/admin/funds" element={<Protected allowedRoles={["Admin"]}><AdminLayout><FundTransactions /></AdminLayout></Protected>} />

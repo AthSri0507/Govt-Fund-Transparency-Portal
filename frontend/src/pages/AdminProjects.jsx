@@ -59,6 +59,14 @@ export default function AdminProjects(){
     try{ const token = getToken(); await axios.post(`/api/projects/${id}/restore`, {}, { headers: { Authorization: `Bearer ${token}` } }); await load() }catch(e){ alert(e.response?.data?.message || e.message) }
   }
 
+  async function toggleFlag(id, current){
+    try{
+      const token = getToken();
+      await axios.patch(`/api/admin/projects/${id}/flag`, { flagged: !current }, { headers: { Authorization: `Bearer ${token}` } });
+      await load()
+    }catch(e){ alert(e.response?.data?.message || e.message) }
+  }
+
   const combined = [...items, ...deletedItems]
     .map(p=>({ ...p, _deleted: !!p.is_deleted }))
     .filter(p => {
@@ -119,6 +127,7 @@ export default function AdminProjects(){
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                         <Link to={`/projects/${p.id}`}>View</Link>
                         {!p._deleted ? <button onClick={()=>doDisable(p.id)}>Disable</button> : <button onClick={()=>doRestore(p.id)}>Restore</button>}
+                        <button onClick={()=>toggleFlag(p.id, !!p.is_flagged)} style={{ color: p.is_flagged ? '#9b1c1c' : undefined }}>{p.is_flagged ? 'Unflag' : 'Flag'}</button>
                         <Link to={`/admin/audit-logs?entity_type=project&entity_id=${p.id}&include_related=true`}>Audit</Link>
                       </div>
                     </td>

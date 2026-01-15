@@ -144,6 +144,41 @@ router.get('/projects/deleted', requireAuth, requireRole('admin'), async (req, r
   }
 });
 
+// GET /admin/projects/flagged - list flagged projects (admin only)
+router.get('/projects/flagged', requireAuth, requireRole('admin'), async (req, res) => {
+  try {
+    let { limit = 100, offset = 0 } = req.query;
+    limit = Math.min(1000, Math.max(1, Number(limit) || 100));
+    offset = Math.max(0, Number(offset) || 0);
+    const sql = `SELECT p.*, (SELECT COALESCE(SUM(amount),0) FROM fund_transaction WHERE project_id = p.id) AS budget_used FROM projects p WHERE COALESCE(p.is_flagged,0) = 1 ORDER BY p.id DESC LIMIT ${limit} OFFSET ${offset}`;
+    const rows = await db.query(sql);
+    return res.json({ data: rows });
+  } catch (err) {
+    console.error('admin/projects/flagged error', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// PATCH /admin/projects/:id/flag - set or clear the flagged state for a project (admin only)
+router.patch('/projects/:id/flag', requireAuth, requireRole('admin'), async (req, res) => {
+  const id = Number(req.params.id);
+  if (!id) return res.status(400).json({ message: 'Invalid project id' });
+  const { flagged } = req.body || {};
+  if (typeof flagged === 'undefined') return res.status(400).json({ message: 'Missing flagged boolean in body' });
+  try {
+    await db.query('UPDATE projects SET is_flagged = ? WHERE id = ?', [flagged ? 1 : 0, id]);
+    // insert audit log entry for moderation action
+    const action = flagged ? 'flag' : 'unflag';
+    const details = JSON.stringify({ flagged: !!flagged });
+    await db.query('INSERT INTO audit_log (entity_type, entity_id, action, details, actor_id) VALUES (?,?,?,?,?)', ['project', id, action, details, req.user && req.user.id ? req.user.id : null]);
+    const rows = await db.query('SELECT p.*, (SELECT COALESCE(SUM(amount),0) FROM fund_transaction WHERE project_id = p.id) AS budget_used FROM projects p WHERE p.id = ?', [id]);
+    return res.json({ data: rows && rows[0] ? rows[0] : null });
+  } catch (err) {
+    console.error('admin/projects flag error', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // GET /admin/stats - small set of quick counts for admin dashboard
 router.get('/stats', requireAuth, requireRole('admin'), async (req, res) => {
   try {

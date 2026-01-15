@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getUser } from '../utils/auth'
+import { getUser, getToken } from '../utils/auth'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
 import { Doughnut } from 'react-chartjs-2'
 
@@ -15,7 +15,10 @@ export default function OfficialHome() {
     let cancelled = false
     async function load(){
       try{
-        const res = await fetch('/api/projects/status-distribution', { headers: { Accept: 'application/json' } })
+        const token = getToken()
+        const headers = { Accept: 'application/json' }
+        if (token) headers.Authorization = `Bearer ${token}`
+        const res = await fetch('/api/projects/status-distribution', { headers })
         const json = await res.json().catch(() => ({}))
         if (cancelled) return
         setStatusCounts(json.data || [])
@@ -38,23 +41,25 @@ export default function OfficialHome() {
       if (l === 'active') return '#4caf50' // green
       if (l === 'halted') return '#ff9800' // orange
       if (l === 'cancelled' || l === 'canceled') return '#f44336' // red
-      return '#bdbdbd' // unknown / grey
+      if (l === 'unknown') return '#f44336'
+      return '#bdbdbd' // other / grey
     }
     const colors = labels.map(colorFor)
     if (!total) {
       const placeholder = { labels: ['No data'], datasets: [{ data: [1], backgroundColor: ['#f3f4f6'] }] }
       const opts = { cutout: '70%', plugins: { legend: { display: false } }, maintainAspectRatio: true }
       return (
-        <div style={{ position: 'relative', width: 120, height: 120 }}>
+        <div style={{ position: 'relative', width: 140, height: 140 }}>
           <Doughnut data={placeholder} options={opts} />
           <div style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#777', fontSize: 12 }}>No status data</div>
         </div>
       )
     }
     const chartData = { labels, datasets: [{ data: counts, backgroundColor: colors }] }
-    const options = { cutout: '50%', plugins: { legend: { position: 'right' } }, maintainAspectRatio: true }
+    // hide internal legend (we render a clean external list) and give chart a bit more room
+    const options = { cutout: '50%', plugins: { legend: { display: false } }, maintainAspectRatio: true }
     return (
-      <div style={{ width: 140, height: 140 }}>
+      <div style={{ width: 160, height: 160 }}>
         <Doughnut data={chartData} options={options} />
       </div>
     )
@@ -73,15 +78,20 @@ export default function OfficialHome() {
 
         <div style={{ marginTop: 18 }}>
           <h3 style={{ marginBottom: 8 }}>Project Status Distribution</h3>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            <div style={{ width: 140, height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafafa', borderRadius: 8 }}>
+          <div style={{ display: 'flex', gap: 24, alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+            <div style={{ width: 160, height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafafa', borderRadius: 8 }}>
               <ProjectStatusPie data={statusCounts} />
             </div>
             <div>
               {(!statusCounts || statusCounts.length === 0) && <div style={{ color: '#666' }}>No status data</div>}
-              {statusCounts.map((s,i)=>(
-                <div key={i} style={{ marginBottom: 6 }}><strong>{s.status}</strong>: {s.count}</div>
-              ))}
+              {statusCounts.map((s,i)=>{
+                const label = s && s.status && s.status.length ? s.status : 'Unknown'
+                return (
+                  <div key={i} style={{ marginBottom: 6 }}>
+                    <strong style={{ color: label === 'Unknown' ? '#f44336' : 'inherit' }}>{label}</strong>: {s.count}
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>
