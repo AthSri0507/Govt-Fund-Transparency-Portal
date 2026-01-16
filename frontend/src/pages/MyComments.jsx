@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { getToken, getUser } from '../utils/auth'
 import { Link } from 'react-router-dom'
+import './MyComments.css'
 
 export default function MyComments(){
   const [loading, setLoading] = useState(true)
@@ -42,26 +43,33 @@ export default function MyComments(){
   if (err) return <div style={{ color: 'red' }}>{err}</div>
 
   return (
-    <div>
-      <h2>My Comments</h2>
+    <div className="mc-page">
+      <h2 className="mc-heading">My Comments</h2>
       {items.length === 0 ? (
         <div>You haven’t posted any comments yet.</div>
       ) : (
-        <div style={{ display: 'grid', gap: 12 }}>
+        <div className="mc-list">
           {items.map(it => (
-            <div key={`${it.project.id}-${it.comment.id}`} style={{ padding: 12, border: '1px solid #ddd', borderRadius: 8 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ fontWeight: 700 }}>{it.project.name}</div>
-                  <div style={{ marginTop: 6 }}>{it.comment.text}</div>
+            <article key={`${it.project.id}-${it.comment.id}`} className="mc-card">
+              <div className="mc-inner">
+                <div className="mc-left">
+                  <div className="mc-project">{it.project.name}</div>
+                  <div className="mc-text">{it.comment.text}</div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div>Rating: {it.comment.rating || '—'}</div>
-                  <div style={{ fontSize: 12, color: '#666' }}>{new Date(it.comment.created_at).toLocaleString()}</div>
-                  <div style={{ marginTop: 8 }}><Link to={`/projects/${it.project.id}`}><button>View project</button></Link></div>
+                <div className="mc-right">
+                  <div className="mc-rating">
+                    <div>Rating:</div>
+                    <div className="mc-stars" aria-hidden>
+                      {Array.from({length:5}).map((_,i)=> (
+                        <span key={i} className={(i < (it.comment.rating||0)) ? 'on' : ''}>★</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mc-meta">{new Date(it.comment.created_at).toLocaleString()}</div>
+                  <div className="mc-action"><Link to={`/projects/${it.project.id}`}><button className="mc-btn">View project</button></Link></div>
                 </div>
               </div>
-            </div>
+            </article>
           ))}
         </div>
       )}

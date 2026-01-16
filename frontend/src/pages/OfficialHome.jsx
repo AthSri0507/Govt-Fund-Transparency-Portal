@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { getUser, getToken } from '../utils/auth'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
 import { Doughnut } from 'react-chartjs-2'
+import './DashboardOfficial.css'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
@@ -10,11 +11,13 @@ export default function OfficialHome() {
   const navigate = useNavigate()
   const user = getUser()
   const [statusCounts, setStatusCounts] = React.useState([])
+  const [err, setErr] = React.useState(null)
 
   React.useEffect(()=>{
     let cancelled = false
     async function load(){
       try{
+        setErr(null)
         const token = getToken()
         const headers = { Accept: 'application/json' }
         if (token) headers.Authorization = `Bearer ${token}`
@@ -24,6 +27,7 @@ export default function OfficialHome() {
         setStatusCounts(json.data || [])
       }catch(e){
         console.error('status distribution load', e)
+        if (!cancelled) setErr(e?.message || String(e))
       }
     }
     load()
@@ -66,46 +70,63 @@ export default function OfficialHome() {
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16 }}>
-      <div style={{ padding: 18, border: '1px solid #e8e8e8', borderRadius: 8, background: '#fff' }}>
-        <h2 style={{ marginTop: 0 }}>Welcome, {user?.name || user?.email}</h2>
-        <p style={{ marginTop: 6 }}>What would you like to do?</p>
-        <div style={{ display: 'flex', gap: 12 }}>
-          <button onClick={() => navigate('/dashboard/official/create')}>Create New Project</button>
-          <button onClick={() => navigate('/dashboard/official/projects')}>Manage Existing Projects</button>
-          <button onClick={() => navigate('/projects')}>Browse Projects</button>
-        </div>
-
-        <div style={{ marginTop: 18 }}>
-          <h3 style={{ marginBottom: 8 }}>Project Status Distribution</h3>
-          <div style={{ display: 'flex', gap: 24, alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-            <div style={{ width: 160, height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafafa', borderRadius: 8 }}>
-              <ProjectStatusPie data={statusCounts} />
+    <div className="do-page">
+      <div className="do-tricolor" />
+      <div className="do-container">
+        <main className="do-main">
+          <header className="do-welcome">
+            <h1 className="do-title">🏛️ Official Dashboard</h1>
+            {err && <div className="do-error">{err}</div>}
+            <div className="do-welcome-sub">Administrative control panel for managing government-funded projects.</div>
+            <div className="do-admin-meta">
+              <div>Role: <span className="do-admin-muted">Official User</span></div>
+              <div>Access Level: <span className="do-admin-muted">Administrative</span></div>
             </div>
-            <div>
-              {(!statusCounts || statusCounts.length === 0) && <div style={{ color: '#666' }}>No status data</div>}
-              {statusCounts.map((s,i)=>{
-                const label = s && s.status && s.status.length ? s.status : 'Unknown'
-                return (
-                  <div key={i} style={{ marginBottom: 6 }}>
-                    <strong style={{ color: label === 'Unknown' ? '#f44336' : 'inherit' }}>{label}</strong>: {s.count}
+          </header>
+
+          <section className="do-card do-actions-card" aria-labelledby="admin-actions">
+            <h2 id="admin-actions" className="do-card-title">Quick Administrative Actions</h2>
+            <div className="do-quick-body">
+              <div className="do-action-row">
+                <button className="do-action-btn" onClick={() => navigate('/dashboard/official/create')}>Create New Project</button>
+                <div className="do-helper">Register a new government-funded initiative</div>
+              </div>
+              <div className="do-action-row">
+                <button className="do-action-btn" onClick={() => navigate('/dashboard/official/projects')}>Manage Projects</button>
+                <div className="do-helper">Approve, update, or close existing projects</div>
+              </div>
+              <div className="do-action-row">
+                <button className="do-action-btn" onClick={() => navigate('/projects')}>View Projects</button>
+                <div className="do-helper">Browse all registered public projects</div>
+              </div>
+            </div>
+          </section>
+
+          <section className="do-card do-projects" aria-labelledby="status-overview">
+            <h2 id="status-overview" className="do-card-title">Project Status Overview</h2>
+            <div className="do-project-status">
+              <div className="do-project-status-chart">
+                <ProjectStatusPie data={statusCounts} />
+              </div>
+              <div className="do-project-status-legend">
+                {(!statusCounts || statusCounts.length === 0) && (
+                  <div className="do-muted">
+                    <div>No project status information available.</div>
+                    <div>Project analytics will appear once data is recorded.</div>
                   </div>
-                )
-              })}
+                )}
+                {statusCounts.map((s,i)=>{
+                  const label = s && s.status && s.status.length ? s.status : 'Unknown'
+                  return (
+                    <div key={i} className="do-status-row">
+                      <strong className={label === 'Unknown' ? 'do-status-unknown' : ''}>{label}</strong>: {s.count}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div style={{ padding: 18 }}>
-        <div style={{ padding: 16, border: '1px solid #e8e8e8', borderRadius: 8, background: '#fff' }}>
-          <h3 style={{ marginTop: 0 }}>Quick Actions</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <button onClick={() => navigate('/dashboard/official/create')}>Create New Project</button>
-            <button onClick={() => navigate('/dashboard/official/projects')}>Manage Projects</button>
-            <button onClick={() => navigate('/projects')}>Browse Projects</button>
-          </div>
-        </div>
+          </section>
+        </main>
       </div>
     </div>
   )

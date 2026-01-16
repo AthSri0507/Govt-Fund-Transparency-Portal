@@ -172,7 +172,11 @@ export default function Home() {
               }).map(p => (
                 <div key={p.id} className="project-card">
                   <div className="project-info-col">
-                    <Link to={`/projects/${p.id}`} className="project-title">{p.name}</Link>
+                    {(() => {
+                      const isOfficial = user && user.role && (String(user.role).toLowerCase() === 'official' || String(user.role).toLowerCase() === 'admin')
+                      const viewPath = isOfficial ? `/dashboard/official/projects/${p.id}/view` : `/projects/${p.id}`
+                      return <Link to={viewPath} className="project-title">{p.name}</Link>
+                    })()}
 
                     <div className="project-meta-row">
                       <span className={`status-badge status-${String(p.status || 'unknown').toLowerCase()}`}>{p.status || 'Unknown'}</span>
@@ -209,11 +213,15 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="project-actions">
+                    <div className="project-actions">
                     {!(user && user.role && (String(user.role).toLowerCase() === 'official' || String(user.role).toLowerCase() === 'admin')) && (
                       <button className="follow-btn" onClick={() => toggleFollow(p.id)} title="Follow project">{followed.has(p.id) ? '★' : '☆'}</button>
                     )}
-                    <Link to={`/projects/${p.id}`} className="btn-primary">View →</Link>
+                    {(() => {
+                      const isOfficial = user && user.role && (String(user.role).toLowerCase() === 'official' || String(user.role).toLowerCase() === 'admin')
+                      const viewPath = isOfficial ? `/dashboard/official/projects/${p.id}/view` : `/projects/${p.id}`
+                      return <Link to={viewPath} className="btn-primary">View →</Link>
+                    })()}
                   </div>
                 </div>
               ))}

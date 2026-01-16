@@ -6,6 +6,7 @@ import ProjectMap from '../components/ProjectMap'
 // Removed duplicate import of React
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend } from 'chart.js'
 import { Line } from 'react-chartjs-2'
+import './ProjectDetail.css'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
 
@@ -92,7 +93,12 @@ function BudgetSpendChart({ projectId }) {
   )
 }
 
-export default function ProjectDetail({ initialOpenTimeline = false }) {
+function toTitleCase(str){
+  if (!str) return ''
+  return str.split(' ').map(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()).join(' ')
+}
+
+export default function ProjectDetail({ initialOpenTimeline = false, forceCitizenView = false }) {
   const { id } = useParams()
   const [project, setProject] = useState(null)
   const [comments, setComments] = useState([])
@@ -106,6 +112,8 @@ export default function ProjectDetail({ initialOpenTimeline = false }) {
   const [commentSort, setCommentSort] = useState('newest')
   const token = getToken()
   const user = getUser()
+  const isCitizen = !!(user && String(user.role).toLowerCase() === 'citizen')
+  const renderAsCitizen = isCitizen || Boolean(forceCitizenView)
 
   useEffect(() => {
     async function load() {
@@ -119,8 +127,9 @@ export default function ProjectDetail({ initialOpenTimeline = false }) {
         setProject(pRes.data && pRes.data.data ? pRes.data.data : pRes.data)
         setComments(cRes.data && cRes.data.data ? cRes.data.data : cRes.data || [])
         setSummary(sRes && sRes.data && sRes.data.data ? sRes.data.data : sRes.data)
-        // filter out comments from the merged timeline (only show updates and fund transactions)
-        setTimeline((tRes && tRes.data && tRes.data.data ? tRes.data.data : (Array.isArray(tRes && tRes.data) ? tRes.data : [])).filter(i => i && i.type !== 'comment'))
+        // only include project updates and fund transactions in the timeline
+        const rawTimeline = (tRes && tRes.data && tRes.data.data ? tRes.data.data : (Array.isArray(tRes && tRes.data) ? tRes.data : []))
+        setTimeline(rawTimeline.filter(i => i && (i.type === 'fund_transaction' || i.type === 'project_update')))
         // add to recently viewed (most recent first, unique, keep 3)
         try {
           const cur = JSON.parse(getUserScopedItem('recent_projects') || '[]')
@@ -151,18 +160,15 @@ export default function ProjectDetail({ initialOpenTimeline = false }) {
       ])
       setComments(cRes.data && cRes.data.data ? cRes.data.data : cRes.data || [])
       setSummary(sRes && sRes.data && sRes.data.data ? sRes.data.data : sRes.data)
-      // refresh project and timeline so avg_rating and timeline include the new comment
       try {
         const [pRef, tRef] = await Promise.all([
           axios.get(`/api/projects/${id}`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: null })),
           axios.get(`/api/projects/${id}/timeline`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] }))
         ])
         if (pRef && pRef.data && pRef.data.data) setProject(pRef.data.data)
-        if (tRef && tRef.data && tRef.data.data) setTimeline((tRef.data.data || []).filter(i => i && i.type !== 'comment'))
-        else if (tRef && Array.isArray(tRef.data)) setTimeline((tRef.data || []).filter(i => i && i.type !== 'comment'))
-      } catch (e) {
-        // non-fatal
-      }
+        const rawT = (tRef && tRef.data && tRef.data.data) ? tRef.data.data : (tRef && Array.isArray(tRef.data) ? tRef.data : [])
+        if (rawT) setTimeline(rawT.filter(i => i && (i.type === 'fund_transaction' || i.type === 'project_update')))
+      } catch (e) {}
       setCommentSuccess('Comment posted')
     } catch (e) {
       setErr(e.response?.data?.message || e.message)
@@ -171,280 +177,526 @@ export default function ProjectDetail({ initialOpenTimeline = false }) {
 
   return (
     <div>
-      {!project && <div>Loading project...</div>}
-      {project && (
-        <div>
-          <h2>{project.name}</h2>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 6 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {project.avg_rating !== null && project.avg_rating !== undefined ? (
-                <>
-                  {renderStars(Math.round(project.avg_rating))}
-                  <div style={{ fontSize: 12, color: '#666' }}>{Number(project.avg_rating).toFixed(1)} avg</div>
-                </>
-              ) : (
-                <div style={{ fontSize: 12, color: '#666' }}>No ratings yet</div>
-              )}
-              <div style={{ marginLeft: 10 }}>
-                {summary && summary.count ? (
-                  (() => {
-                    const avg = typeof summary.average === 'number' ? summary.average : null
-                    let label = 'Neutral'
-                    let emoji = '🟡'
-                    if (avg !== null) {
-                      if (avg > 0) { label = 'Positive'; emoji = '🟢' }
-                      else if (avg < 0) { label = 'Negative'; emoji = '🔴' }
-                      else { label = 'Neutral'; emoji = '🟡' }
-                    }
-                    return (
-                      <div style={{ fontSize: 13, color: '#444', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ fontWeight: 600 }}>{emoji} {label} sentiment</div>
-                      </div>
-                    )
-                  })()
-                ) : (
-                  <div style={{ fontSize: 12, color: '#666', marginLeft: 6 }}>Waiting for processing</div>
-                )}
-              </div>
-            </div>
-            <div style={{ marginLeft: 12 }}>
-              <FollowButton projectId={project.id} />
-            </div>
-          </div>
-          <div style={{ marginTop: 6 }}>
-            <p style={{ margin: 0 }}>
-              <strong>Status:</strong>{' '}
-              <span style={{
-                color: project.status === 'Active' ? 'green' : project.status === 'Halted' ? 'orange' : 'red'
-              }}>{project.status || 'Unknown'}</span>
-            </p>
-            {user && user.role && user.role.toLowerCase() === 'official' && (
-              <div style={{ marginTop: 8 }}>
-                <label>
-                  Change Status:{' '}
-                  <select value={project.status || 'Active'} onChange={async (e) => {
-                    const newStatus = e.target.value
-                    try {
-                      const token = getToken()
-                      await axios.put(`/api/projects/${project.id}/status`, { status: newStatus }, { headers: { Authorization: `Bearer ${token}` } })
-                      setProject({ ...project, status: newStatus })
-                    } catch (err) {
-                      console.error('status change failed', err)
-                      alert('Failed to update status')
-                    }
-                  }}>
-                    <option value="Active">Active</option>
-                    <option value="Halted">Halted</option>
-                    <option value="Cancelled">Cancelled</option>
-                  </select>
-                </label>
-              </div>
-            )}
-          </div>
+        {!project && <div>Loading project...</div>}
+        {project && (
+          renderAsCitizen ? (
+            <div className="project-detail citizen">
+              <div className="card header-card project-header">
+                <div className="header-rows">
+                  <div className="header-row1" style={{ width: '100%' }}>
+                    <h2 className="project-title">{project.name}</h2>
+                  </div>
 
-          <div style={{ marginTop: 8 }}>{project.description}</div>
-
-          <div style={{ marginTop: 8 }}>
-            <strong>Department:</strong> {project.department || '—'}
-          </div>
-          <div style={{ marginTop: 4 }}>
-            <strong>Location:</strong> {project.state || ''}{project.city ? `, ${project.city}` : ''}{project.area ? `, ${project.area}` : ''}
-          </div>
-
-          {((project.contractor_name) || (project.contractor_company) || (project.contractor_contact)) && (
-            <div style={{ marginTop: 8, padding: 12, border: '1px solid #eee', borderRadius: 8, background: '#fafafa' }}>
-              <strong>Contractor</strong>
-              <div style={{ marginTop: 6 }}>
-                {project.contractor_name && <div>Name: {project.contractor_name}</div>}
-                {project.contractor_company && <div>Company: {project.contractor_company}</div>}
-                {project.contractor_contact && <div>Contact: {project.contractor_contact}</div>}
-                {project.contractor_registration_id && <div>Registration ID: {project.contractor_registration_id}</div>}
-                {project.contract_start_date && <div>Contract Start: {project.contract_start_date}</div>}
-                {project.contract_end_date && <div>Contract End: {project.contract_end_date}</div>}
-              </div>
-            </div>
-          )}
-
-          <div style={{ marginTop: 10, display: 'flex', gap: 20, alignItems: 'flex-start' }}>
-            <div style={{ padding: 16, border: '1px solid #ddd', borderRadius: 8, background: '#fff', minWidth: 260 }}>
-              <div style={{ marginBottom: 8 }}><strong>Budget</strong></div>
-              <div>Total: ₹{project.budget_total ?? 0}</div>
-              <div>Used: ₹{project.budget_used ?? 0}</div>
-              <div>Remaining: ₹{(Number(project.budget_total || 0) - Number(project.budget_used || 0)).toFixed(2)}</div>
-              <div style={{ marginTop: 12 }}>
-                <BudgetDonut total={Number(project.budget_total || 0)} used={Number(project.budget_used || 0)} />
-              </div>
-            </div>
-            <div style={{ flex: 1, padding: 16, border: '1px solid #ddd', borderRadius: 8, background: '#fff' }}>
-              <BudgetSpendChart projectId={project.id} />
-            </div>
-          </div>
-
-          {project.latitude && project.longitude && (
-            <div style={{ marginTop: 20, padding: 12, border: '1px solid #ddd', borderRadius: 8, background: '#fff' }}>
-              {(!user || (user.role && user.role.toLowerCase() !== 'official' && user.role.toLowerCase() !== 'admin')) && (
-                <h3 style={{ marginTop: 0 }}>Project Location</h3>
-              )}
-              <ProjectMap projects={[project]} single={true} />
-            </div>
-          )}
-          <div style={{ marginTop: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, border: '1px solid #ddd', borderRadius: 8, background: '#fff' }}>
-              <h3 style={{ margin: 0 }}>Timeline</h3>
-              <div>
-                <button onClick={() => setTimelineOpen(o => !o)} style={{ padding: '6px 10px' }}>{timelineOpen ? 'Hide' : 'Show'} timeline</button>
-              </div>
-            </div>
-
-            <div style={{ marginTop: 8 }}>
-              {!timeline || timeline.length === 0 ? (
-                <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8, background: '#fff' }}>No timeline events yet.</div>
-              ) : (
-                <div style={{ padding: 0 }}>
-                  {/* If closed, show compact preview with most recent event */}
-                  {!timelineOpen && (
-                    <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8, background: '#fff', display: 'flex', alignItems: 'center', gap: 12 }}>
-                      {(() => {
-                        const item = timeline[0]
-                        const color = item.type === 'fund_transaction' ? '#2e7d32' : item.type === 'project_update' ? '#1976d2' : item.type === 'comment' ? '#ef6c00' : '#9e9e9e'
-                        return (
-                          <>
-                            <div style={{ width: 14, height: 14, borderRadius: 7, background: color }} />
-                            <div style={{ fontSize: 13 }}>
-                              <div style={{ fontWeight: 600 }}>{item.type === 'project_update' ? 'Update' : item.type === 'fund_transaction' ? 'Fund' : 'Comment'}</div>
-                              <div style={{ color: '#444' }}>{item.type === 'fund_transaction' ? `₹${item.amount} — ${item.purpose}` : item.type === 'project_update' ? (item.update_text || item.text) : item.text}</div>
-                              <div style={{ fontSize: 12, color: '#666' }}>{new Date(item.occurred_at || item.created_at).toLocaleString()}</div>
-                            </div>
-                          </>
-                        )
-                      })()}
+                  <div className="header-row-actions" style={{ marginTop: 8, display: 'flex', gap: 12, alignItems: 'center' }}>
+                        <div className={`status-badge ${project.status ? project.status.toLowerCase() : ''}`}>{project.status || 'Unknown'}</div>
+                    <div className="rating-block" style={{ marginLeft: 12 }}>
+                      {project.avg_rating !== null && project.avg_rating !== undefined ? (
+                        <>
+                          <div className="stars" title={`${Number(project.avg_rating).toFixed(1)} avg`}>{renderStars(Math.round(project.avg_rating))}</div>
+                        </>
+                      ) : (
+                        <div className="no-rating">No ratings yet</div>
+                      )}
                     </div>
-                  )}
+                    <div className="follow-wrapper" style={{ marginLeft: 12 }}><FollowButton projectId={project.id} /></div>
+                  </div>
 
-                  {/* Expanded timeline */}
-                  {timelineOpen && (
-                    <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8, background: '#fff' }}>
-                      <ul style={{ listStyle: 'none', paddingLeft: 0, margin: 0 }}>
-                        {timeline.map(item => {
-                          const color = item.type === 'fund_transaction' ? '#2e7d32' : item.type === 'project_update' ? '#1976d2' : item.type === 'comment' ? '#ef6c00' : '#9e9e9e'
-                          return (
-                            <li key={`${item.type}-${item.id}`} style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-                              <div style={{ width: 18, display: 'flex', justifyContent: 'center' }}>
-                                <div style={{ width: 12, height: 12, borderRadius: 6, background: color, marginTop: 6 }} />
-                              </div>
-                              <div style={{ flex: 1 }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-                                  <div>
-                                    <div style={{ fontWeight: 600, marginBottom: 4 }}>{item.type === 'project_update' ? 'Official update' : item.type === 'fund_transaction' ? 'Fund transaction' : 'Comment'}</div>
-                                    <div style={{ color: '#222' }}>{item.type === 'fund_transaction' ? `₹${item.amount} — ${item.purpose}` : item.type === 'project_update' ? (item.update_text || item.text) : item.text}</div>
-                                  </div>
-                                  <div style={{ fontSize: 12, color: '#666', minWidth: 150, textAlign: 'right' }}>{new Date(item.occurred_at || item.created_at).toLocaleString()}</div>
+                  <div className="header-row2" style={{ marginTop: 12, display: 'flex', gap: 20 }}>
+                    <div className="meta-block">
+                      <div className="meta-label">Department</div>
+                      <div className="meta-value">{project.department || '—'}</div>
+
+                      <div className="project-desc-block" style={{ marginTop: 8 }}>
+                        <div className="desc-label">Project description</div>
+                        <div className="project-desc-text">{project.description}</div>
+                      </div>
+                    </div>
+                    <div className="meta-block">
+                      <div className="meta-label">Location</div>
+                      <div className="meta-value">{project.state || ''}{project.city ? `, ${project.city}` : ''}{project.area ? `, ${project.area}` : ''}</div>
+                    </div>
+                  </div>
+                </div>
+
+                
+              </div>
+
+
+              {((project.contractor_name) || (project.contractor_company) || (project.contractor_contact)) && (
+                <div className="contractor-info">
+                  <div className="card-title">Contractor details</div>
+                  <div className="contractor-grid">
+                    {project.contractor_name && (
+                      <>
+                        <div className="contractor-label">Name</div>
+                        <div className="contractor-value">{project.contractor_name}</div>
+                      </>
+                    )}
+                    {project.contractor_company && (
+                      <>
+                        <div className="contractor-label">Company</div>
+                        <div className="contractor-value">{project.contractor_company}</div>
+                      </>
+                    )}
+                    {project.contractor_contact && (
+                      <>
+                        <div className="contractor-label">Contact</div>
+                        <div className="contractor-value">{project.contractor_contact}</div>
+                      </>
+                    )}
+                    {project.contractor_registration_id && (
+                      <>
+                        <div className="contractor-label">Reg ID</div>
+                        <div className="contractor-value">{project.contractor_registration_id}</div>
+                      </>
+                    )}
+                    {(project.contract_start_date || project.contract_end_date) && (
+                      <>
+                        <div className="contractor-label">Contract</div>
+                        <div className="contractor-value">{project.contract_start_date || '—'} → {project.contract_end_date || '—'}</div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="stats-grid">
+                <div className="card budget-card">
+                  <div className="card-title">Budget</div>
+                  <div className="budget-values">
+                    <div className="budget-row"><span className="budget-label">Total</span><span className="budget-value">₹{project.budget_total ?? 0}</span></div>
+                    <div className="budget-row"><span className="budget-label">Used</span><span className="budget-value">₹{project.budget_used ?? 0}</span></div>
+                    <div className="budget-row"><span className="budget-label">Remaining</span><span className="budget-value">₹{(Number(project.budget_total || 0) - Number(project.budget_used || 0)).toFixed(2)}</span></div>
+                  </div>
+                  <div className="donut-wrap"><BudgetDonut total={Number(project.budget_total || 0)} used={Number(project.budget_used || 0)} size={120} /></div>
+                </div>
+                <div className="card chart-card">
+                  <div className="card-title">Budget Spend Over Time</div>
+                  <BudgetSpendChart projectId={project.id} />
+                </div>
+              </div>
+
+
+
+              {project.latitude && project.longitude && (
+                <div className="card map-card">
+                  <h3 className="map-title">Project Location</h3>
+                  <ProjectMap projects={[project]} single={true} />
+                </div>
+              )}
+
+              <div className="timeline-card">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, border: '1px solid #ddd', borderRadius: 8, background: '#fff' }}>
+                  <h3 style={{ margin: 0 }}>Timeline</h3>
+                  <div>
+                    <button className="btn timeline-toggle" onClick={() => setTimelineOpen(o => !o)}>{timelineOpen ? 'Hide' : 'Show'} timeline</button>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: 8 }}>
+                  {!timeline || timeline.length === 0 ? (
+                    <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8, background: '#fff' }}>No timeline events yet.</div>
+                  ) : (
+                    <div style={{ padding: 0 }}>
+                      {/* If closed, show compact preview with most recent event */}
+                      {!timelineOpen && (
+                        <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8, background: '#fff', display: 'flex', alignItems: 'center', gap: 12 }}>
+                          {(() => {
+                            const item = timeline[0]
+                            const color = item.type === 'fund_transaction' ? '#2e7d32' : item.type === 'project_update' ? '#1976d2' : item.type === 'comment' ? '#ef6c00' : '#9e9e9e'
+                            const typeClass = item.type === 'fund_transaction' ? 'fund' : item.type === 'project_update' ? 'update' : 'comment'
+                            return (
+                              <div className={`timeline-preview ${typeClass}`}>
+                                <div className="timeline-preview-dot" style={{ background: color }} />
+                                <div style={{ fontSize: 13 }}>
+                                  <div style={{ fontWeight: 600 }}>{item.type === 'project_update' ? 'Update' : item.type === 'fund_transaction' ? 'Fund' : 'Comment'}</div>
+                                  <div style={{ color: '#444' }}>{item.type === 'fund_transaction' ? `₹${item.amount} — ${item.purpose}` : item.type === 'project_update' ? (item.update_text || item.text) : item.text}</div>
+                                  <div style={{ fontSize: 12, color: '#666' }}>{new Date(item.occurred_at || item.created_at).toLocaleString()}</div>
                                 </div>
                               </div>
-                            </li>
-                          )
-                        })}
-                      </ul>
+                            )
+                          })()}
+                        </div>
+                      )}
+
+                      {/* Expanded timeline */}
+                      {timelineOpen && (
+                        <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8, background: '#fff' }}>
+                          <ul style={{ listStyle: 'none', paddingLeft: 0, margin: 0 }}>
+                            {timeline.map(item => {
+                              const color = item.type === 'fund_transaction' ? '#2e7d32' : item.type === 'project_update' ? '#1976d2' : item.type === 'comment' ? '#ef6c00' : '#9e9e9e'
+                              const typeClass = item.type === 'fund_transaction' ? 'fund' : item.type === 'project_update' ? 'update' : 'comment'
+                              return (
+                                <li key={`${item.type}-${item.id}`} className={`timeline-row ${typeClass}`} style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+                                  <div style={{ width: 18, display: 'flex', justifyContent: 'center' }}>
+                                    <div style={{ width: 12, height: 12, borderRadius: 6, background: color, marginTop: 6 }} />
+                                  </div>
+                                  <div style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                                      <div>
+                                        <div style={{ fontWeight: 600, marginBottom: 4 }}>{item.type === 'project_update' ? 'Official update' : item.type === 'fund_transaction' ? 'Fund transaction' : 'Comment'}</div>
+                                        <div style={{ color: '#222' }}>{item.type === 'fund_transaction' ? `₹${item.amount} — ${item.purpose}` : item.type === 'project_update' ? (item.update_text || item.text) : item.text}</div>
+                                      </div>
+                                      <div style={{ fontSize: 12, color: '#666', minWidth: 150, textAlign: 'right' }}>{new Date(item.occurred_at || item.created_at).toLocaleString()}</div>
+                                    </div>
+                                  </div>
+                                </li>
+                              )
+                            })}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      <section style={{ marginTop: 16 }}>
-        <h3>Sentiment</h3>
-        {summary ? (
-          <div>
-            <div><strong>{summary.summary_text}</strong></div>
-            {summary.top_keywords && <div>Top keywords: {summary.top_keywords.map(k=>k.word||k).slice(0,10).join(', ')}</div>}
-            {summary.top_phrases && <div>Top phrases: {summary.top_phrases.map(p=>p.phrase||p).slice(0,10).join(', ')}</div>}
-          </div>
-        ) : (
-          <div>No sentiment summary available yet.</div>
-        )}
-      </section>
-
-      <section style={{ marginTop: 16 }}>
-        {(!user || (user.role && user.role.toLowerCase() !== 'official' && user.role.toLowerCase() !== 'admin')) && (
-          <h3>Comments</h3>
-        )}
-        {err && <div style={{ color: 'red' }}>{err}</div>}
-        {/* Only citizens can post comments; hide form for officials/admins */}
-        {(!user || (user.role && user.role.toLowerCase() !== 'official' && user.role.toLowerCase() !== 'admin')) && (
-          <form onSubmit={submit} style={{ marginBottom: 12 }}>
-            <div>
-              <textarea value={text} onChange={e=>setText(e.target.value)} rows={3} cols={60} placeholder="Write your comment" />
-            </div>
-            <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div>
-                <label>Rating: </label>
-                <select value={rating} onChange={e=>setRating(Number(e.target.value))}>
-                  <option value={5}>5</option>
-                  <option value={4}>4</option>
-                  <option value={3}>3</option>
-                  <option value={2}>2</option>
-                  <option value={1}>1</option>
-                </select>
               </div>
-              <div>
-                <button type="submit" disabled={!text || text.trim().length === 0}>Post comment</button>
-              </div>
-              {commentSuccess && <div style={{ color: 'green' }}>{commentSuccess}</div>}
-            </div>
-          </form>
-        )}
-        <div style={{ marginTop: 8, marginBottom: 8, display: 'flex', gap: 12, alignItems: 'center' }}>
-          <label>Sort: <select value={commentSort} onChange={e=>setCommentSort(e.target.value)}><option value="newest">Newest</option><option value="rating">Highest rating</option></select></label>
-        </div>
-        {(!comments || comments.length === 0) ? (
-          <div style={{ color: '#666' }}>Be the first to comment</div>
-        ) : (
-          <ul>
-            {(comments || []).slice().sort((a,b)=>{
-              if (commentSort === 'rating') return (b.rating||0) - (a.rating||0)
-              return new Date(b.created_at) - new Date(a.created_at)
-            }).map(c => (
-              <li key={c.id} style={{ marginBottom: 8 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ fontWeight: 600 }}>
-                      {(() => {
-                        const authorFromComment = (c.user && (c.user.name || c.user.email)) || c.user_name || c.user_email
-                        if (authorFromComment) return authorFromComment
-                        if (c.user_id && user && String(c.user_id) === String(user.id)) return user.name || user.email
-                        return 'Citizen'
-                      })()}
+
+              <div className="card comments-card">
+                <div className="comments-header"><h3>What citizens say</h3></div>
+                <div className="sentiment-block">
+                  {(summary && summary.count > 0) && (
+                    <div>
+                      <div className="summary-text"><strong>{summary.summary_text}</strong></div>
+                      {summary.top_keywords && <div className="muted">Top keywords: {summary.top_keywords.map(k=>k.word||k).slice(0,10).join(', ')}</div>}
+                      {summary.top_phrases && <div className="muted">Top phrases: {summary.top_phrases.map(p=>p.phrase||p).slice(0,10).join(', ')}</div>}
                     </div>
-                    <div>{c.text}</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div>{renderStars(Math.round(c.rating||0))}</div>
-                    <div style={{ fontSize: 12, color: '#666' }}>{new Date(c.created_at).toLocaleString()}</div>
+                  )}
+                </div>
+
+                {err && <div className="error">{err}</div>}
+                {user && String(user.role).toLowerCase() === 'citizen' && (
+                  <form onSubmit={submit} className="comment-form">
+                    <textarea value={text} onChange={e=>setText(e.target.value)} rows={3} className="comment-input" placeholder="Share your opinion!" />
+                    <div className="comment-actions">
+                      <label className="rating-label">Rating: <StarInput value={rating} onChange={setRating} /></label>
+                      <button type="submit" className="btn" disabled={!text || text.trim().length === 0}>Post comment</button>
+                      {commentSuccess && <div className="success">{commentSuccess}</div>}
+                    </div>
+                  </form>
+                )}
+
+                <div className="comments-list">
+                  {(comments || []).slice().sort((a,b)=>{
+                    if (commentSort === 'rating') return (b.rating||0) - (a.rating||0)
+                    return new Date(b.created_at) - new Date(a.created_at)
+                  }).map(c => (
+                    <div key={c.id} className="comment-row">
+                      <div className="comment-left">
+                        <div className="comment-author">{(() => {
+                          const authorFromComment = (c.user && (c.user.name || c.user.email)) || c.user_name || c.user_email
+                          if (authorFromComment) return authorFromComment
+                          if (c.user_id && user && String(c.user_id) === String(user.id)) return user.name || user.email
+                          return 'Citizen'
+                        })()}</div>
+                        <div className="comment-text">{c.text}</div>
+                      </div>
+                      <div className="comment-right">
+                        <div className="comment-stars">{renderStars(Math.round(c.rating||0))}</div>
+                        <div className="comment-time">{new Date(c.created_at).toLocaleString()}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <h2>{project.name}</h2>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {project.avg_rating !== null && project.avg_rating !== undefined ? (
+                    <div className="stars" title={`${Number(project.avg_rating).toFixed(1)} avg`}>
+                      {renderStars(Math.round(project.avg_rating))}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 12, color: '#666' }}>No ratings yet</div>
+                  )}
+                  <div style={{ marginLeft: 10 }}>
+                    {summary && summary.count ? (
+                      (() => {
+                        const avg = typeof summary.average === 'number' ? summary.average : null
+                        let label = 'Neutral'
+                        if (avg !== null) {
+                          if (avg > 0) { label = 'Positive' }
+                          else if (avg < 0) { label = 'Negative' }
+                          else { label = 'Neutral' }
+                        }
+                        return (
+                          <div style={{ fontSize: 13, color: '#444', display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <div style={{ fontWeight: 600 }}>{label} sentiment</div>
+                          </div>
+                        )
+                      })()
+                    ) : (
+                      <div style={{ fontSize: 12, color: '#666', marginLeft: 6 }}>Waiting for processing</div>
+                    )}
                   </div>
                 </div>
-                {c.sentiment_summary_cached && (()=>{
-                  let s = c.sentiment_summary_cached
-                  if (typeof s === 'string') { try { s = JSON.parse(s) } catch(e){} }
-                  const score = s && typeof s.score === 'number' ? s.score : null
-                  const label = score === null ? null : (score > 0 ? 'Positive' : score < 0 ? 'Negative' : 'Neutral')
-                  return label ? <div style={{ marginTop: 6 }}><span style={{ padding: '2px 6px', background: '#f0f0f0', borderRadius: 6 }}>{label}</span></div> : null
-                })()}
-              </li>
-            ))}
-          </ul>
+                <div style={{ marginLeft: 12 }}>
+                  <FollowButton projectId={project.id} />
+                </div>
+              </div>
+
+              <div style={{ marginTop: 6 }}>
+                <p style={{ margin: 0 }}>
+                  <strong>Status:</strong>{' '}
+                  <span style={{
+                    color: project.status === 'Active' ? 'green' : project.status === 'Halted' ? 'orange' : 'red'
+                  }}>{project.status || 'Unknown'}</span>
+                </p>
+                {user && user.role && user.role.toLowerCase() === 'official' && (
+                  <div style={{ marginTop: 8 }}>
+                    <label>
+                      Change Status:{' '}
+                      <select value={project.status || 'Active'} onChange={async (e) => {
+                        const newStatus = e.target.value
+                        try {
+                          const token = getToken()
+                          await axios.put(`/api/projects/${project.id}/status`, { status: newStatus }, { headers: { Authorization: `Bearer ${token}` } })
+                          setProject({ ...project, status: newStatus })
+                        } catch (err) {
+                          console.error('status change failed', err)
+                          alert('Failed to update status')
+                        }
+                      }}>
+                        <option value="Active">Active</option>
+                        <option value="Halted">Halted</option>
+                        <option value="Cancelled">Cancelled</option>
+                      </select>
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ marginTop: 8 }}>{project.description}</div>
+
+              <div style={{ marginTop: 8 }}>
+                <strong>Department:</strong> {project.department || '—'}
+              </div>
+              <div style={{ marginTop: 4 }}>
+                <strong>Location:</strong> {project.state || ''}{project.city ? `, ${project.city}` : ''}{project.area ? `, ${project.area}` : ''}
+              </div>
+
+              {((project.contractor_name) || (project.contractor_company) || (project.contractor_contact)) && (
+                <div style={{ marginTop: 8, padding: 12, border: '1px solid #eee', borderRadius: 8, background: '#fafafa' }}>
+                  <strong>Contractor</strong>
+                  <div style={{ marginTop: 6 }}>
+                    {project.contractor_name && <div>Name: {project.contractor_name}</div>}
+                    {project.contractor_company && <div>Company: {project.contractor_company}</div>}
+                    {project.contractor_contact && <div>Contact: {project.contractor_contact}</div>}
+                    {project.contractor_registration_id && <div>Registration ID: {project.contractor_registration_id}</div>}
+                    {project.contract_start_date && <div>Contract Start: {project.contract_start_date}</div>}
+                    {project.contract_end_date && <div>Contract End: {project.contract_end_date}</div>}
+                  </div>
+                </div>
+              )}
+
+              <div style={{ marginTop: 10, display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+                <div style={{ padding: 16, border: '1px solid #ddd', borderRadius: 8, background: '#fff', minWidth: 260 }}>
+                  <div style={{ marginBottom: 8 }}><strong>Budget</strong></div>
+                  <div>Total: ₹{project.budget_total ?? 0}</div>
+                  <div>Used: ₹{project.budget_used ?? 0}</div>
+                  <div>Remaining: ₹{(Number(project.budget_total || 0) - Number(project.budget_used || 0)).toFixed(2)}</div>
+                  <div style={{ marginTop: 12 }}>
+                    <BudgetDonut total={Number(project.budget_total || 0)} used={Number(project.budget_used || 0)} />
+                  </div>
+                </div>
+                <div style={{ flex: 1, padding: 16, border: '1px solid #ddd', borderRadius: 8, background: '#fff' }}>
+                  <BudgetSpendChart projectId={project.id} />
+                </div>
+              </div>
+
+              {project.latitude && project.longitude && (
+                <div style={{ marginTop: 20, padding: 12, border: '1px solid #ddd', borderRadius: 8, background: '#fff' }}>
+                  <h3 style={{ marginTop: 0 }}>Project Location</h3>
+                  <ProjectMap projects={[project]} single={true} />
+                </div>
+              )}
+
+              <div style={{ marginTop: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, border: '1px solid #ddd', borderRadius: 8, background: '#fff' }}>
+                  <h3 style={{ margin: 0 }}>Timeline</h3>
+                  <div>
+                    <button onClick={() => setTimelineOpen(o => !o)} style={{ padding: '6px 10px' }}>{timelineOpen ? 'Hide' : 'Show'} timeline</button>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: 8 }}>
+                  {!timeline || timeline.length === 0 ? (
+                    <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8, background: '#fff' }}>No timeline events yet.</div>
+                  ) : (
+                    <div style={{ padding: 0 }}>
+                      {/* If closed, show compact preview with most recent event */}
+                      {!timelineOpen && (
+                        <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8, background: '#fff', display: 'flex', alignItems: 'center', gap: 12 }}>
+                          {(() => {
+                            const item = timeline[0]
+                            const color = item.type === 'fund_transaction' ? '#2e7d32' : item.type === 'project_update' ? '#1976d2' : item.type === 'comment' ? '#ef6c00' : '#9e9e9e'
+                            const typeClass = item.type === 'fund_transaction' ? 'fund' : item.type === 'project_update' ? 'update' : 'comment'
+                            return (
+                              <div className={`timeline-preview ${typeClass}`}>
+                                <div className="timeline-preview-dot" style={{ background: color }} />
+                                <div style={{ fontSize: 13 }}>
+                                  <div style={{ fontWeight: 600 }}>{item.type === 'project_update' ? 'Update' : item.type === 'fund_transaction' ? 'Fund' : 'Comment'}</div>
+                                  <div style={{ color: '#444' }}>{item.type === 'fund_transaction' ? `₹${item.amount} — ${item.purpose}` : item.type === 'project_update' ? (item.update_text || item.text) : item.text}</div>
+                                  <div style={{ fontSize: 12, color: '#666' }}>{new Date(item.occurred_at || item.created_at).toLocaleString()}</div>
+                                </div>
+                              </div>
+                            )
+                          })()}
+                        </div>
+                      )}
+
+                      {/* Expanded timeline */}
+                      {timelineOpen && (
+                        <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8, background: '#fff' }}>
+                          <ul style={{ listStyle: 'none', paddingLeft: 0, margin: 0 }}>
+                            {timeline.map(item => {
+                              const color = item.type === 'fund_transaction' ? '#2e7d32' : item.type === 'project_update' ? '#1976d2' : item.type === 'comment' ? '#ef6c00' : '#9e9e9e'
+                              const typeClass = item.type === 'fund_transaction' ? 'fund' : item.type === 'project_update' ? 'update' : 'comment'
+                              return (
+                                <li key={`${item.type}-${item.id}`} className={`timeline-row ${typeClass}`} style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+                                  <div style={{ width: 18, display: 'flex', justifyContent: 'center' }}>
+                                    <div style={{ width: 12, height: 12, borderRadius: 6, background: color, marginTop: 6 }} />
+                                  </div>
+                                  <div style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                                      <div>
+                                        <div style={{ fontWeight: 600, marginBottom: 4 }}>{item.type === 'project_update' ? 'Official update' : item.type === 'fund_transaction' ? 'Fund transaction' : 'Comment'}</div>
+                                        <div style={{ color: '#222' }}>{item.type === 'fund_transaction' ? `₹${item.amount} — ${item.purpose}` : item.type === 'project_update' ? (item.update_text || item.text) : item.text}</div>
+                                      </div>
+                                      <div style={{ fontSize: 12, color: '#666', minWidth: 150, textAlign: 'right' }}>{new Date(item.occurred_at || item.created_at).toLocaleString()}</div>
+                                    </div>
+                                  </div>
+                                </li>
+                              )
+                            })}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <section style={{ marginTop: 16 }}>
+                <h3>Sentiment</h3>
+                {summary ? (
+                  <div>
+                    <div><strong>{summary.summary_text}</strong></div>
+                    {summary.top_keywords && <div>Top keywords: {summary.top_keywords.map(k=>k.word||k).slice(0,10).join(', ')}</div>}
+                    {summary.top_phrases && <div>Top phrases: {summary.top_phrases.map(p=>p.phrase||p).slice(0,10).join(', ')}</div>}
+                  </div>
+                ) : (
+                  <div>No sentiment summary available yet.</div>
+                )}
+              </section>
+
+              <section style={{ marginTop: 16 }}>
+                {(!user || (user.role && user.role.toLowerCase() !== 'official' && user.role.toLowerCase() !== 'admin')) && (
+                  <h3>Comments</h3>
+                )}
+                {err && <div style={{ color: 'red' }}>{err}</div>}
+                {/* Only citizens can post comments; hide form for officials/admins */}
+                {(!user || (user.role && user.role.toLowerCase() !== 'official' && user.role.toLowerCase() !== 'admin')) && (
+                  <form onSubmit={submit} style={{ marginBottom: 12 }}>
+                    <div>
+                      <textarea value={text} onChange={e=>setText(e.target.value)} rows={3} cols={60} placeholder="Share your opinion!" />
+                    </div>
+                    <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div>
+                        <label className="rating-label">Rating: <StarInput value={rating} onChange={setRating} /></label>
+                      </div>
+                      <div>
+                        <button type="submit" disabled={!text || text.trim().length === 0}>Post comment</button>
+                      </div>
+                      {commentSuccess && <div style={{ color: 'green' }}>{commentSuccess}</div>}
+                    </div>
+                  </form>
+                )}
+                <div style={{ marginTop: 8, marginBottom: 8, display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <label>Sort: <select value={commentSort} onChange={e=>setCommentSort(e.target.value)}><option value="newest">Newest</option><option value="rating">Highest rating</option></select></label>
+                </div>
+                {(!comments || comments.length === 0) ? (
+                  <div style={{ color: '#666' }}>Be the first to comment</div>
+                ) : (
+                  <ul>
+                    {(comments || []).slice().sort((a,b)=>{
+                      if (commentSort === 'rating') return (b.rating||0) - (a.rating||0)
+                      return new Date(b.created_at) - new Date(a.created_at)
+                    }).map(c => (
+                      <li key={c.id} style={{ marginBottom: 8 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <div style={{ fontWeight: 600 }}>
+                              {(() => {
+                                const authorFromComment = (c.user && (c.user.name || c.user.email)) || c.user_name || c.user_email
+                                if (authorFromComment) return authorFromComment
+                                if (c.user_id && user && String(c.user_id) === String(user.id)) return user.name || user.email
+                                return 'Citizen'
+                              })()}
+                            </div>
+                            <div>{c.text}</div>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div>{renderStars(Math.round(c.rating||0))}</div>
+                            <div style={{ fontSize: 12, color: '#666' }}>{new Date(c.created_at).toLocaleString()}</div>
+                          </div>
+                        </div>
+                        {c.sentiment_summary_cached && (()=>{
+                          let s = c.sentiment_summary_cached
+                          if (typeof s === 'string') { try { s = JSON.parse(s) } catch(e){} }
+                          const score = s && typeof s.score === 'number' ? s.score : null
+                          const label = score === null ? null : (score > 0 ? 'Positive' : score < 0 ? 'Negative' : 'Neutral')
+                          return label ? <div style={{ marginTop: 6 }}><span style={{ padding: '2px 6px', background: '#f0f0f0', borderRadius: 6 }}>{label}</span></div> : null
+                        })()}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            </div>
+          )
         )}
-      </section>
-    </div>
-  )
+
+        
+      </div>
+    )
 }
 
 function renderStars(n) {
   const stars = []
   for (let i=0;i<5;i++) stars.push(<span key={i} style={{ color: i < n ? '#fbc02d' : '#e0e0e0' }}>★</span>)
   return <span>{stars}</span>
+}
+
+function StarInput({ value, onChange }){
+  const [hover, setHover] = useState(0)
+  const stars = []
+  for (let i=1;i<=5;i++){
+    const active = hover ? i <= hover : i <= (value||0)
+    stars.push(
+      <button
+        key={i}
+        type="button"
+        className={"star" + (active ? ' on' : '')}
+        onClick={() => onChange(i)}
+        onMouseEnter={() => setHover(i)}
+        onMouseLeave={() => setHover(0)}
+        onFocus={() => setHover(i)}
+        onBlur={() => setHover(0)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onChange(i); }
+          if (e.key === 'ArrowLeft') { e.preventDefault(); setHover(Math.max(1, (hover||value) - 1)); }
+          if (e.key === 'ArrowRight') { e.preventDefault(); setHover(Math.min(5, (hover||value) + 1)); }
+        }}
+        aria-label={i + ' star'}
+      >
+        ★
+      </button>
+    )
+  }
+  return <div className="star-input" role="radiogroup" aria-label="Rating">{stars}</div>
 }
 
 function FollowButton({ projectId }){
@@ -480,6 +732,6 @@ function FollowButton({ projectId }){
   }
 
   return (
-    <button onClick={toggle} disabled={saving} style={{ padding: '6px 10px' }}>{followed ? '★ Unfollow' : '☆ Follow project'}</button>
+    <button className="follow-btn" onClick={toggle} disabled={saving}>{followed ? '★ Unfollow' : '☆ Follow project'}</button>
   )
 }

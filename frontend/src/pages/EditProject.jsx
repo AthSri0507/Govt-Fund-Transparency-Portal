@@ -5,7 +5,7 @@ import { useParams } from 'react-router-dom'
 import { getToken } from '../utils/auth'
 import './CreateProject.css'
 
-export default function CreateProject() {
+export default function EditProject() {
   const { id } = useParams()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -99,8 +99,8 @@ export default function CreateProject() {
     <div className="cp-page">
       <div className="cp-tricolor" />
       <div className="cp-header">
-        <h1 className="cp-title">Create New Government Project</h1>
-        <div className="cp-sub">Official project registration form for government-funded initiatives.</div>
+        <h1 className="cp-title">Edit Your Project</h1>
+        <div className="cp-sub">Official project editing registration form for government-funded initiatives.</div>
         <div className="cp-helper">All information entered here will be used for official government project records. Ensure accuracy before submission.</div>
         {err && <div style={{ color: 'red' }}>{err}</div>}
       </div>
@@ -204,9 +204,9 @@ export default function CreateProject() {
         </div>
       
         <div className="cp-submit-container">
-          <button type="submit" className="cp-submit-large" disabled={submitting}>{submitting ? 'Creating...' : 'Register Project'}</button>
-        </div>
-      </form>
-    </div>
-  )
-}
+          <button type="submit" className="cp-submit-large" disabled={submitting}>{submitting ? 'Updating...' : 'Confirm Edited Details'}</button>
+         </div>
+       </form>
+     </div>
+   )
+ }

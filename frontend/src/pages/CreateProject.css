@@ -1,0 +1,58 @@
+/* CreateProject.css — Government form styling scoped to cp- classes */
+:root{
+  --gov-navy:#0b3c5d;
+  --gov-muted:#6b7280;
+  --gov-saffron:#f4a261;
+  --bg:#f6f8fb;
+}
+
+.cp-page{background:var(--bg); padding:24px; font-family:Inter, Arial, sans-serif; color:#102030}
+.cp-tricolor{height:4px; background:linear-gradient(90deg, rgba(244,162,97,0.95) 0%, rgba(255,255,255,1) 50%, rgba(19,136,8,0.95) 100%); border-radius:4px 4px 0 0; margin-bottom:12px}
+
+.cp-header{margin:12px 0 18px}
+.cp-title{margin:0; font-size:22px; color:var(--gov-navy); font-weight:800}
+.cp-sub{color:var(--gov-muted); margin-top:6px}
+.cp-helper{color:var(--gov-muted); margin-top:8px; font-size:13px}
+
+.cp-grid{display:grid; grid-template-columns:480px 1fr; gap:20px; align-items:stretch}
+/* removed .cp-right wrapper; contractor card now sits as grid col2 */
+
+/* Make the location card span both columns so it expands left */
+.cp-location{grid-column:1 / -1}
+
+.cp-card{background:#fff; border:1px solid #e6e6e6; border-radius:8px; padding:16px; box-shadow:0 6px 16px rgba(11,60,93,0.04)}
+.cp-card-title{font-weight:800; color:var(--gov-navy); margin:0 0 12px 0}
+
+.cp-label{display:block; font-weight:700; font-size:13px; margin-bottom:6px; color:#233142}
+.cp-optional{color:var(--gov-muted); font-weight:600; font-size:12px; margin-left:6px}
+
+/* Inputs inside this page only */
+.cp-page input[type="text"], .cp-page input[type="number"], .cp-page input[type="date"], .cp-page textarea, .cp-page select, .cp-page input[type="email"]{
+  width:100%; padding:8px 10px; border:1px solid #d6dde6; border-radius:6px; font-size:14px; color:#102030; box-sizing:border-box
+}
+
+.cp-textarea{min-height:88px}
+
+/* focus outline */
+.cp-page input:focus, .cp-page textarea:focus, .cp-page select:focus{outline:3px solid rgba(11,60,93,0.06); border-color:var(--gov-navy)}
+
+.cp-row{margin-bottom:12px}
+.cp-grid-2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.cp-dates > div{display:inline-block; width:48%}
+
+.cp-submit{background:var(--gov-navy); color:#fff; border:none; padding:10px 14px; border-radius:6px; font-weight:800; cursor:pointer}
+.cp-submit:disabled{opacity:0.6}
+
+/* Large submit button placed after the full form; scoped to this page */
+.cp-submit-container{margin-top:18px}
+.cp-page .cp-submit-large{background:var(--gov-navy); color:#fff; border:none; padding:12px 16px; border-radius:6px; font-weight:900; cursor:pointer; width:1584px; max-width:100%}
+.cp-page .cp-submit-large:disabled{opacity:0.6}
+
+/* Map preview box style—scoped */
+.cp-map{border-radius:6px; background:#fbfdff}
+
+/* Responsive */
+@media (max-width:900px){
+  .cp-grid{grid-template-columns:1fr}
+  .cp-dates > div{width:100%}
+}

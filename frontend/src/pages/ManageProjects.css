@@ -1,49 +1,88 @@
-/* Styles for ManageProjects page — layout + authoritative gov styling */
-:root{
-  --bg:#f4f7fb;
-  --card:#ffffff;
-  --muted:#6b7280;
-  --accent:#0b3c5d;
-  --border:#dfe6ee;
+/* Manage Projects - page-scoped styles (namespace: mp-) */
+
+:root { --mp-blue: #0b5fa5; --mp-deep: #0b3a66; --mp-muted: #546e7a; --mp-green: #065f46; --mp-saffron: #ff9933 }
+
+.manage-container {
+  padding: 28px 8px;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  background: transparent;
 }
 
-.manage-container{background:var(--bg);padding:20px;min-height:100vh}
-.manage-title{font-size:24px;font-weight:700;color:var(--accent);margin-bottom:12px}
-.error-text{color:#b91c1c;margin-bottom:10px}
-
-.manage-grid{display:grid;grid-template-columns:420px 1fr;gap:20px;align-items:start}
-
-.filter-box{background:var(--card);border:1px solid var(--border);padding:14px;border-radius:6px}
-.filter-box h3{margin:0 0 12px;color:var(--accent)}
-.filter-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
-.filter-row .filter-item{min-width:80px}
-
-.projects-section{margin-top:14px}
-.section-heading{color:var(--accent);font-weight:700;margin:12px 0}
-.projects-list{}
-
-.project-card{background:var(--card);border:1px solid var(--border);padding:10px 12px;border-radius:6px;margin-bottom:10px;font-size:14px}
-.project-header{display:flex;justify-content:space-between;align-items:center}
-.project-title{margin:0;font-size:15px;color:var(--accent);font-weight:600}
-.project-body{margin-top:6px;color:#374151}
-.project-meta{margin-top:6px;color:var(--muted);font-size:13px}
-.project-actions button{margin-left:0}
-
-.project-links{margin-top:10px;display:flex;gap:12px;align-items:center}
-.btn-primary{background:var(--accent);color:white;padding:6px 10px;border-radius:4px;text-decoration:none}
-.link-muted{color:var(--muted);margin-left:6px}
-.btn-secondary{background:#f3f4f6;border:1px solid #e6e9ee;color:#334155;padding:6px 8px;border-radius:4px;cursor:pointer}
-
-.form-row{margin-top:10px}
-.form-row form{display:flex;gap:8px;align-items:center}
-.form-inline{display:flex;gap:8px;align-items:center}
-.input-small{width:86px;padding:6px;border:1px solid #e6eef6;border-radius:4px}
-.input-flex{flex:1;padding:6px;border:1px solid #e6eef6;border-radius:4px}
-.filter-item{padding:6px;border:1px solid #e6eef6;border-radius:4px}
-
-.map-container{border:1px solid var(--border);border-radius:6px;min-height:420px;height:420px;overflow:hidden;background:#fff}
-
-@media (max-width:1000px){
-  .manage-grid{grid-template-columns:1fr}
-  .map-container{order:2}
+.mp-inner {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0; /* left alignment will be handled explicitly */
+  margin-left: 92px; /* align with header portal-title (18px padding + 56px logo + 18px gap) */
 }
+
+.manage-title { font-size: 26px; font-weight:700; color:var(--mp-deep); margin-bottom:18px }
+
+.mp-filter-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 6px 18px rgba(11,58,102,0.06);
+  margin-bottom: 20px;
+  position: relative;
+}
+.mp-filter-card::before{ content: ''; position:absolute; left:0; right:0; top:0; height:4px; background: linear-gradient(90deg, #ff9933, #fff, #2e8b57); border-radius:8px 8px 0 0 }
+.mp-filter-title{ margin:0; font-size:18px; font-weight:700; color:var(--mp-deep) }
+.mp-filter-desc{ margin:6px 0 12px 0; color:var(--mp-muted); font-size:13px }
+.mp-filter-row{ display:flex; gap:12px }
+.mp-filter-input{ flex:1; padding:10px 12px; border:1px solid #e6eef6; border-radius:6px }
+
+.mp-projects { margin-top: 6px }
+.mp-projects h3{ margin:0 0 12px 0; font-size:20px; color:var(--mp-deep); font-weight:700 }
+.mp-projects-list{ display:flex; flex-direction:column; gap:18px }
+
+.mp-card{ width:100%; background:#fff; border-radius:8px; box-shadow:0 6px 18px rgba(11,58,102,0.06); padding:20px; position:relative; overflow:visible }
+.mp-card-top{ height:6px; border-radius:6px 6px 0 0; background: linear-gradient(90deg, #ff9933, #ffffff 50%, #2e8b57) }
+.mp-card-header{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px }
+.mp-title{ margin:0; font-size:20px; font-weight:700; color:var(--mp-deep) }
+.mp-badge-wrap{ margin-left:12px }
+.mp-body{ margin-top:12px; color:#374151; font-size:14px; line-height:1.45 }
+
+.mp-budget-row{ display:flex; gap:24px; margin-top:14px; align-items:center }
+.mp-budget-item{ color:#243b4a; font-weight:600 }
+.mp-amount{ font-weight:700; margin-left:6px }
+
+.mp-forms-row{ display:flex; gap:12px; margin-top:14px }
+.mp-forms-row{ display:flex; gap:12px; margin-top:14px }
+.mp-forms-left, .mp-forms-right{ flex:1 }
+
+.mp-fund-row{ margin-top:14px }
+.mp-update-row{ margin-top:12px }
+
+.mp-form-inline{ display:flex; gap:8px; align-items:center }
+.mp-input-small{ width:120px; padding:8px 10px; border:1px solid #e6eef6; border-radius:6px }
+.mp-input-flex{ flex:1; padding:8px 10px; border:1px solid #e6eef6; border-radius:6px }
+
+.mp-actions-row{ display:flex; justify-content:flex-end; align-items:center; gap:12px; margin-top:16px }
+.mp-actions-right{ display:flex; gap:12px; align-items:center }
+
+.mp-btn{ padding:8px 12px; min-width:102px; height:36px; border-radius:6px; border:1px solid transparent; cursor:pointer; font-weight:600; display:inline-flex; align-items:center; justify-content:center }
+.mp-btn-primary{ background:var(--mp-blue); color:white }
+.mp-btn-secondary{ background:#f3f6f9; color:var(--mp-deep); border:1px solid #e6eef6 }
+.mp-link-muted{ color:var(--mp-muted); text-decoration:underline }
+.mp-btn-tertiary{ background:#ffffff; color:var(--mp-deep); border:1px solid #dbe9f5 }
+
+/* Remove underlines for button-like links */
+.mp-btn, .mp-btn-edit, .mp-btn-primary, .mp-btn-secondary, .mp-btn-tertiary { text-decoration: none }
+
+.mp-badge { padding:6px 10px; border-radius:999px; font-weight:700 }
+
+/* Edit button style - placed before other actions */
+.mp-btn-edit{ background: white; color: var(--mp-blue); border: 1px solid var(--mp-blue); padding:8px 12px; border-radius:6px }
+.mp-btn-edit:hover{ background: rgba(11,95,165,0.06) }
+
+@media (max-width:900px){
+  .mp-form-inline{ flex-direction:column; align-items:stretch }
+  .mp-forms-row{ flex-direction:column }
+  .mp-budget-row{ flex-direction:column; align-items:flex-start }
+}
+
+@media (max-width:1100px){
+  .mp-inner{ margin-left: auto; margin-right: auto; padding: 0 12px }
+}
+
+/* Ensure no global selectors are used here to avoid cascading */

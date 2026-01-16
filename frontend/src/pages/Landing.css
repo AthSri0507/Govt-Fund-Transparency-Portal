@@ -2,7 +2,7 @@
   --deep-blue: #0B3C5D;
   --saffron: #FF9933;
   --green: #138808;
-  --muted: #F6F8FA;
+  --muted: #f8f9fb;
   --max-width: 1250px;
 }
 
@@ -33,6 +33,8 @@ body,html,#root{height:100%}
 .btn{display:inline-block;padding:12px 18px;border-radius:12px;text-decoration:none;font-weight:700;font-size:15px;transition:transform .16s ease,box-shadow .16s ease}
 .btn-primary{background:var(--saffron);color:#062233;box-shadow:0 8px 20px rgba(255,153,51,0.16);border:0}
 .btn-primary:hover{transform:translateY(-3px);box-shadow:0 20px 48px rgba(255,153,51,0.18)}
+.btn-secondary{background:var(--saffron);color:#062233;box-shadow:0 8px 20px rgba(255,153,51,0.16);border:0}
+.btn-secondary:hover{transform:translateY(-3px);box-shadow:0 20px 48px rgba(255,153,51,0.18)}
 .btn-outline{background:transparent;color:white;border:2px solid rgba(255,255,255,0.85);padding:10px 16px}
 .btn-outline:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(2,10,20,0.08)}
 
@@ -45,7 +47,7 @@ body,html,#root{height:100%}
 .lp-container{max-width:1250px;margin:0 auto;padding:36px 20px}
 /* shared page-width wrapper used by steps/trust to align edges */
 .lp-page-width{max-width:1250px;margin:0 auto;padding:0 20px}
-.lp-features{background:var(--muted);padding-top:18px;padding-bottom:18px}
+.lp-features{background:#aeb1b8 var(--muted);padding-top:18px;padding-bottom:18px}
 .lp-card{background:white;border-radius:14px;padding:28px;display:flex;flex-direction:column;align-items:flex-start;gap:14px;box-shadow:0 20px 60px rgba(11,60,93,0.08);border:1px solid rgba(11,60,93,0.06);height:100%;transition:transform .18s ease,box-shadow .18s ease}
 .lp-card:hover{transform:translateY(-8px);box-shadow:0 32px 80px rgba(11,60,93,0.08)}
 .lp-container .lp-card{min-height:150px;min-width:0}
@@ -84,8 +86,8 @@ body,html,#root{height:100%}
 /* stronger override for join-banner register button in case other rules win */
 .lp-join-right .btn-join-primary{background:var(--saffron) !important;color:#062233 !important;border:2px solid rgba(255,255,255,0.95) !important;box-shadow:0 12px 36px rgba(255,153,51,0.18) !important}
 .lp-join-right .btn-join-primary:hover{transform:translateY(-2px)}
-.btn-join-secondary{padding:10px 16px;font-size:14px;background:#18a751;color:#fff;border:0;box-shadow:0 8px 20px rgba(24,167,81,0.12);transition:transform .12s ease,box-shadow .12s ease}
-.btn-join-secondary:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(24,167,81,0.16)}
+.lp-join-right .btn-join-secondary{padding:10px 16px;font-size:14px;background:#18a751;color:#fff;border:0;box-shadow:0 8px 20px rgba(24,167,81,0.12);transition:transform .12s ease,box-shadow .12s ease}
+.lp-join-right .btn-join-secondary:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(24,167,81,0.16)}
 
 /* make both join buttons equal width and height */
 .lp-join-right .btn{min-width:160px;height:48px;display:inline-flex;align-items:center;justify-content:center;border-radius:12px}

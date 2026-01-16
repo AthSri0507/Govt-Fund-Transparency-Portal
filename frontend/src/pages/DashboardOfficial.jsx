@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { Link } from 'react-router-dom'
 import { getToken } from '../utils/auth'
+import './DashboardOfficial.css'
 
 export default function DashboardOfficial() {
   const [projects, setProjects] = useState([])
@@ -88,91 +89,90 @@ export default function DashboardOfficial() {
   }
 
   return (
-    <div>
-      <h2>Official Dashboard</h2>
-      {err && <div style={{ color: 'red' }}>{err}</div>}
-
-      <section style={{ marginBottom: 24 }}>
-        <h3>Create Project</h3>
-        <form onSubmit={createProject}>
-          <div>
-            <label>Name</label><br />
-            <input value={name} onChange={e=>setName(e.target.value)} required />
-          </div>
-          <div>
-            <label>Description</label><br />
-            <input value={description} onChange={e=>setDescription(e.target.value)} />
-          </div>
-          <div>
-            <label>Budget total</label><br />
-            <input type="number" value={budget} onChange={e=>setBudget(e.target.value)} />
-          </div>
-          <div>
-            <label>State</label><br />
-            <select value={stateName} onChange={e=>setStateName(e.target.value)} required>
-              <option value="">Select state</option>
-              <option>Karnataka</option>
-              <option>Maharashtra</option>
-              <option>Tamil Nadu</option>
-              <option>Delhi</option>
-              <option>West Bengal</option>
-            </select>
-          </div>
-          <div>
-            <label>City</label><br />
-            <input value={city} onChange={e=>setCity(e.target.value)} required placeholder="e.g. Bengaluru" />
-          </div>
-          <div>
-            <label>Area / Locality (optional)</label><br />
-            <input value={area} onChange={e=>setArea(e.target.value)} placeholder="e.g. Rajarajeshwari Nagar" />
-          </div>
-          <div>
-            <label>Department</label><br />
-            <select value={department} onChange={e=>setDepartment(e.target.value)} required>
-              <option value="">Select department</option>
-              <option>Public Works</option>
-              <option>Health</option>
-              <option>Education</option>
-              <option>Transport</option>
-              <option>Urban Development</option>
-            </select>
-          </div>
-          <div>
-            <label>Latitude (optional)</label><br />
-            <input value={latitude} onChange={e=>setLatitude(e.target.value)} placeholder="e.g. 12.9121" />
-          </div>
-          <div>
-            <label>Longitude (optional)</label><br />
-            <input value={longitude} onChange={e=>setLongitude(e.target.value)} placeholder="e.g. 77.5195" />
-          </div>
-          <div>
-            <button type="submit">Create Project</button>
-          </div>
-        </form>
-      </section>
-
-      <section>
-        <h3>Your Projects</h3>
-        <div>
-          {projects.map(p => (
-            <div key={p.id} style={{ border: '1px solid #ddd', padding: 12, marginBottom: 12 }}>
-              <h4>{p.name}</h4>
-              <div>{p.description}</div>
-              <div>Budget total: {p.budget_total} · Used: {p.budget_used}</div>
-              <div style={{ marginTop: 8 }}>
-                <AddFundForm projectId={p.id} onDone={()=>loadProjects()} addFund={addFund} />
-              </div>
-              <div style={{ marginTop: 8 }}>
-                <AddUpdateForm projectId={p.id} addUpdate={addUpdate} />
-              </div>
-              <div style={{ marginTop: 8 }}>
-                <Link to={`/projects/${p.id}`}>View Project</Link>
-                <Link to={`/projects/${p.id}/timeline`} style={{ marginLeft: 12 }}>View Timeline</Link>
-              </div>
+    <div className="do-page">
+      <div className="do-tricolor" />
+      <div className="do-container">
+        <main className="do-main">
+          <header className="do-welcome">
+            <h1 className="do-title">Welcome, atharva</h1>
+            {err && <div className="do-error">{err}</div>}
+            <div className="do-welcome-sub">What would you like to do?</div>
+            <div className="do-actions">
+              <button className="do-action-btn">Create New Project</button>
+              <button className="do-action-btn">Manage Existing Projects</button>
+              <Link to="/citizen/projects"><button className="do-action-btn">Browse Projects</button></Link>
             </div>
-          ))}
-        </div>
-      </section>
+          </header>
+
+          <section className="do-card do-create" aria-labelledby="create-project">
+            <h2 id="create-project" className="do-card-title">Create Project</h2>
+            <form onSubmit={createProject} className="do-form">
+              <div className="do-form-row"><label>Name</label><input value={name} onChange={e=>setName(e.target.value)} required /></div>
+              <div className="do-form-row"><label>Description</label><input value={description} onChange={e=>setDescription(e.target.value)} /></div>
+              <div className="do-form-row"><label>Budget total</label><input type="number" value={budget} onChange={e=>setBudget(e.target.value)} /></div>
+              <div className="do-form-row"><label>State</label><select value={stateName} onChange={e=>setStateName(e.target.value)} required>
+                <option value="">Select state</option>
+                <option>Karnataka</option>
+                <option>Maharashtra</option>
+                <option>Tamil Nadu</option>
+                <option>Delhi</option>
+                <option>West Bengal</option>
+              </select></div>
+              <div className="do-form-row"><label>City</label><input value={city} onChange={e=>setCity(e.target.value)} required placeholder="e.g. Bengaluru" /></div>
+              <div className="do-form-row"><label>Area / Locality (optional)</label><input value={area} onChange={e=>setArea(e.target.value)} placeholder="e.g. Rajarajeshwari Nagar" /></div>
+              <div className="do-form-row"><label>Department</label><select value={department} onChange={e=>setDepartment(e.target.value)} required>
+                <option value="">Select department</option>
+                <option>Public Works</option>
+                <option>Health</option>
+                <option>Education</option>
+                <option>Transport</option>
+                <option>Urban Development</option>
+              </select></div>
+              <div className="do-form-row do-row-flex">
+                <div><label>Latitude (optional)</label><input value={latitude} onChange={e=>setLatitude(e.target.value)} placeholder="e.g. 12.9121" /></div>
+                <div><label>Longitude (optional)</label><input value={longitude} onChange={e=>setLongitude(e.target.value)} placeholder="e.g. 77.5195" /></div>
+              </div>
+              <div className="do-form-row"><button type="submit" className="do-submit">Create Project</button></div>
+            </form>
+          </section>
+
+          <section className="do-card do-projects" aria-labelledby="your-projects">
+            <h2 id="your-projects" className="do-card-title">Your Projects</h2>
+            <div className="do-project-list">
+              {projects.map(p => (
+                <div key={p.id} className="do-project-item">
+                  <div className="do-project-left">
+                    <div className="do-project-name">{p.name}</div>
+                    <div className="do-project-desc">{p.description}</div>
+                    <div className="do-project-budget">Budget total: {p.budget_total} · Used: {p.budget_used}</div>
+                    <div className="do-project-forms">
+                      <AddFundForm projectId={p.id} onDone={()=>loadProjects()} addFund={addFund} />
+                      <AddUpdateForm projectId={p.id} addUpdate={addUpdate} />
+                    </div>
+                  </div>
+                  <div className="do-project-right">
+                    <div className="do-links">
+                      <Link to={`/projects/${p.id}`} className="do-link">View Project</Link>
+                      <Link to={`/projects/${p.id}/timeline`} className="do-link">View Timeline</Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </main>
+
+        <aside className="do-sidebar">
+          <div className="do-quick">
+            <h3 className="do-quick-title">Quick Actions</h3>
+            <div className="do-quick-body">
+              <button className="do-quick-btn">Create New Project</button>
+              <button className="do-quick-btn">Manage Projects</button>
+              <Link to="/citizen/projects"><button className="do-quick-btn">Browse Projects</button></Link>
+            </div>
+          </div>
+        </aside>
+      </div>
     </div>
   )
 }

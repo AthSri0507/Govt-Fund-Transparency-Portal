@@ -52,35 +52,58 @@ export default function ManageProjects() {
 
   return (
     <div className="manage-container">
-      <div className="manage-title">Manage Projects</div>
-      {err && <div className="error-text">{err}</div>}
-
-      <div className="manage-grid">
-        <div className="left-col">
-          <div className="filter-box">
-            <h3>Filters</h3>
-            <div className="filter-row">
-              <input
-                className="filter-item"
-                placeholder="Filter by project name"
-                value={filterName}
-                onChange={e => setFilterName(e.target.value)}
-              />
-            </div>
+      <div className="mp-inner">
+        <div className="manage-title">Manage Your Registered Projects</div>
+        {err && <div className="error-text">{err}</div>}
+        <div className="mp-filter-card">
+          <h3 className="mp-filter-title">Project Filters</h3>
+          <p className="mp-filter-desc">Search and filter registered government projects.</p>
+          <div className="mp-filter-row">
+            <input
+              className="mp-filter-input"
+              placeholder="Filter by project name"
+              value={filterName}
+              onChange={e => setFilterName(e.target.value)}
+            />
           </div>
+        </div>
 
-          <section className="projects-section">
-            <h3 className="section-heading">Your Projects</h3>
-            <div className="projects-list">
-              {projects
-                .filter(p => !filterName || String(p.name || '').toLowerCase().includes(filterName.trim().toLowerCase()))
-                .map(p => (
-                <div key={p.id} className="project-card">
-                  <div className="project-header">
-                    <h4 className="project-title">{p.name} <StatusBadge status={p.status} /></h4>
-                    <div className="project-actions">
+        <section className="mp-projects">
+          <h3>Registered Projects</h3>
+          <div className="mp-projects-list">
+            {projects
+              .filter(p => !filterName || String(p.name || '').toLowerCase().includes(filterName.trim().toLowerCase()))
+              .map(p => (
+              <article key={p.id} className="mp-card">
+                  <div className="mp-card-top" />
+
+                  <header className="mp-card-header">
+                    <h4 className="mp-title">{p.name}</h4>
+                    <div className="mp-badge-wrap">
+                      <StatusBadge status={p.status} />
+                    </div>
+                  </header>
+
+                  <div className="mp-body">{p.description}</div>
+
+                  <div className="mp-budget-row">
+                    <div className="mp-budget-item">Budget Total: <span className="mp-amount">₹{p.budget_total}</span></div>
+                    <div className="mp-budget-item">Amount Used: <span className="mp-amount">₹{p.budget_used}</span></div>
+                  </div>
+
+                  <div className="mp-fund-row">
+                    <AddFundForm projectId={p.id} onDone={() => loadProjects()} addFund={addFund} />
+                  </div>
+
+                  <div className="mp-update-row">
+                    <AddUpdateForm projectId={p.id} addUpdate={addUpdate} />
+                  </div>
+
+                  <footer className="mp-actions-row">
+                    <div className="mp-actions-right">
+                      <Link to={`/dashboard/official/projects/${p.id}/edit`} className="mp-btn mp-btn-edit">Edit</Link>
                       {p.status !== 'Disabled' ? (
-                        <button className="btn-secondary" onClick={async ()=>{
+                        <button className="mp-btn mp-btn-secondary" onClick={async ()=>{
                           const ok = window.confirm('Disabling a project hides it from citizens. Are you sure you want to disable this project?')
                           if (!ok) return
                           try {
@@ -90,7 +113,7 @@ export default function ManageProjects() {
                           } catch(e){ alert(e.response?.data?.message || e.message) }
                         }}>Disable</button>
                       ) : (
-                        <button className="btn-secondary" onClick={async ()=>{
+                        <button className="mp-btn mp-btn-secondary" onClick={async ()=>{
                           const ok = window.confirm('Restore this project and make it visible to citizens?')
                           if (!ok) return
                           try {
@@ -98,34 +121,17 @@ export default function ManageProjects() {
                             await axios.post(`/api/projects/${p.id}/restore`, {}, { headers: { Authorization: `Bearer ${token}` } })
                             await loadProjects()
                           } catch(e){ alert(e.response?.data?.message || e.message) }
-                        }}>Restore</button>
+                        }}>Enable</button>
                       )}
+
+                      <Link to={`/dashboard/official/projects/${p.id}/view`} className="mp-btn mp-btn-primary">View</Link>
+                      <Link to={`/projects/${p.id}/timeline`} className="mp-btn mp-btn-tertiary">Timeline</Link>
                     </div>
-                  </div>
-                  <div className="project-body">{p.description}</div>
-                  <div className="project-meta">Budget total: {p.budget_total} · Used: {p.budget_used}</div>
-
-                  <div className="form-row">
-                    <AddFundForm projectId={p.id} onDone={() => loadProjects()} addFund={addFund} />
-                  </div>
-
-                  <div className="form-row">
-                    <AddUpdateForm projectId={p.id} addUpdate={addUpdate} />
-                  </div>
-
-                  <div className="project-links">
-                    <Link to={`/projects/${p.id}`} className="btn-primary">View Project</Link>
-                    <Link to={`/projects/${p.id}/timeline`} className="link-muted">View Timeline</Link>
-                  </div>
-                </div>
+                  </footer>
+                </article>
               ))}
             </div>
-          </section>
-        </div>
-
-        <div className="map-container">
-          {/* Map is placed here for layout; existing map initialization logic (if any) remains untouched */}
-        </div>
+        </section>
       </div>
     </div>
   )
@@ -160,10 +166,10 @@ function AddFundForm({ projectId, addFund, onDone }) {
         setSubmitting(false)
       }
     }}>
-        <div className="form-inline">
-          <input className="input-small" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="amount" />
-          <input className="input-flex" value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="purpose" />
-          <button className="btn-primary" type="submit" disabled={submitting}>{submitting ? 'Adding...' : 'Add Fund'}</button>
+        <div className="mp-form-inline">
+          <input className="mp-input-small" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="amount" />
+          <input className="mp-input-flex" value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="purpose" />
+          <button className="mp-btn mp-btn-primary" type="submit" disabled={submitting}>{submitting ? 'Adding...' : 'Add Fund'}</button>
         </div>
       {localErr && <div style={{ color: 'red' }}>{localErr}</div>}
     </form>
@@ -187,9 +193,9 @@ function AddUpdateForm({ projectId, addUpdate }) {
         setSubmitting(false)
       }
     }}>
-      <div className="form-inline">
-        <input className="input-flex" value={text} onChange={e => setText(e.target.value)} placeholder="Timeline update (optional status)" />
-        <button className="btn-primary" type="submit" disabled={submitting}>{submitting ? 'Posting...' : 'Post Update'}</button>
+      <div className="mp-form-inline">
+        <input className="mp-input-flex" value={text} onChange={e => setText(e.target.value)} placeholder="Timeline update (optional status)" />
+        <button className="mp-btn mp-btn-primary" type="submit" disabled={submitting}>{submitting ? 'Posting...' : 'Post Update'}</button>
       </div>
       {localErr && <div style={{ color: 'red' }}>{localErr}</div>}
     </form>
