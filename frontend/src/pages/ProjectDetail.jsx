@@ -410,7 +410,14 @@ export default function ProjectDetail({ initialOpenTimeline = false }) {
               <li key={c.id} style={{ marginBottom: 8 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <div style={{ fontWeight: 600 }}>{c.user_name || c.user_id || 'Citizen'}</div>
+                    <div style={{ fontWeight: 600 }}>
+                      {(() => {
+                        const authorFromComment = (c.user && (c.user.name || c.user.email)) || c.user_name || c.user_email
+                        if (authorFromComment) return authorFromComment
+                        if (c.user_id && user && String(c.user_id) === String(user.id)) return user.name || user.email
+                        return 'Citizen'
+                      })()}
+                    </div>
                     <div>{c.text}</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>

@@ -1,6 +1,7 @@
 import React from 'react'
-import { Routes, Route, Link, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import siteLogo from './assets/logo.png'
+import Header from './components/Header'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Landing from './pages/Landing'
@@ -21,7 +22,6 @@ import AdminProjects from './pages/AdminProjects'
 import AdminFlaggedProjects from './pages/AdminFlaggedProjects'
 import AdminLayout from './layouts/AdminLayout'
 import { getToken, getUser, clearAll } from './utils/auth'
-import { useNavigate } from 'react-router-dom'
 
 function Protected({ children, allowedRoles }) {
   const token = getToken();
@@ -47,56 +47,7 @@ export default function App() {
   return (
     <div>
       {!isAdminRoute && (
-        <header style={{ padding: 10, borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <a href="#" onClick={(e)=>{ e.preventDefault();
-                if (user && user.role) {
-                  const r = String(user.role).toLowerCase()
-                  if (r === 'official') return navigate('/dashboard/official')
-                  if (r === 'admin') return navigate('/dashboard/admin')
-                  return navigate('/dashboard/citizen')
-                }
-                navigate('/')
-              }} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit' }}>
-              <img src={siteLogo} alt="College Logo" style={{ width: 95, height: 65 }} />
-              <div>
-                <div style={{ fontSize: 18, fontWeight: 600 }}>Government Fund Transparency Portal</div>
-                <div style={{ fontSize: 12, color: '#666' }}>Citizen Portal</div>
-              </div>
-            </a>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            
-            {user ? (
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <div style={{ marginRight: 12 }}>
-                  <strong>{user.name || user.email}</strong>
-                  <div style={{ fontSize: 12, color: '#666' }}>{user.role}</div>
-                </div>
-                <div style={{ marginRight: 12 }}>
-                  <select onChange={(e)=>{ const v=e.target.value; if(v==='profile'){} else if(v==='dashboard'){ navigate(
-                    user.role && user.role.toLowerCase() === 'official'
-                      ? '/dashboard/official'
-                      : user.role && user.role.toLowerCase() === 'admin'
-                      ? '/dashboard/admin'
-                      : '/dashboard/citizen'
-                  ); } else if(v==='logout'){ handleLogout(); } }}>
-                    <option value="">Menu</option>
-                    <option value="dashboard">Go to Dashboard</option>
-                    <option value="profile">Profile</option>
-                    <option value="logout">Logout</option>
-                  </select>
-                </div>
-                <button onClick={handleLogout}>Logout</button>
-              </div>
-            ) : (
-              <>
-                <Link to="/login">Login</Link>
-                <Link to="/register" style={{ marginLeft: 8 }}>Register</Link>
-              </>
-            )}
-          </div>
-        </header>
+        <Header variant={(location.pathname.startsWith('/login') || location.pathname.startsWith('/register') || location.pathname.startsWith('/forgot')) ? 'auth' : 'landing'} />
       )}
       <main style={{ padding: 16 }}>
         <Routes>

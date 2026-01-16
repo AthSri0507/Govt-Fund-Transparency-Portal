@@ -1,0 +1,49 @@
+/* Styles for ManageProjects page — layout + authoritative gov styling */
+:root{
+  --bg:#f4f7fb;
+  --card:#ffffff;
+  --muted:#6b7280;
+  --accent:#0b3c5d;
+  --border:#dfe6ee;
+}
+
+.manage-container{background:var(--bg);padding:20px;min-height:100vh}
+.manage-title{font-size:24px;font-weight:700;color:var(--accent);margin-bottom:12px}
+.error-text{color:#b91c1c;margin-bottom:10px}
+
+.manage-grid{display:grid;grid-template-columns:420px 1fr;gap:20px;align-items:start}
+
+.filter-box{background:var(--card);border:1px solid var(--border);padding:14px;border-radius:6px}
+.filter-box h3{margin:0 0 12px;color:var(--accent)}
+.filter-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.filter-row .filter-item{min-width:80px}
+
+.projects-section{margin-top:14px}
+.section-heading{color:var(--accent);font-weight:700;margin:12px 0}
+.projects-list{}
+
+.project-card{background:var(--card);border:1px solid var(--border);padding:10px 12px;border-radius:6px;margin-bottom:10px;font-size:14px}
+.project-header{display:flex;justify-content:space-between;align-items:center}
+.project-title{margin:0;font-size:15px;color:var(--accent);font-weight:600}
+.project-body{margin-top:6px;color:#374151}
+.project-meta{margin-top:6px;color:var(--muted);font-size:13px}
+.project-actions button{margin-left:0}
+
+.project-links{margin-top:10px;display:flex;gap:12px;align-items:center}
+.btn-primary{background:var(--accent);color:white;padding:6px 10px;border-radius:4px;text-decoration:none}
+.link-muted{color:var(--muted);margin-left:6px}
+.btn-secondary{background:#f3f4f6;border:1px solid #e6e9ee;color:#334155;padding:6px 8px;border-radius:4px;cursor:pointer}
+
+.form-row{margin-top:10px}
+.form-row form{display:flex;gap:8px;align-items:center}
+.form-inline{display:flex;gap:8px;align-items:center}
+.input-small{width:86px;padding:6px;border:1px solid #e6eef6;border-radius:4px}
+.input-flex{flex:1;padding:6px;border:1px solid #e6eef6;border-radius:4px}
+.filter-item{padding:6px;border:1px solid #e6eef6;border-radius:4px}
+
+.map-container{border:1px solid var(--border);border-radius:6px;min-height:420px;height:420px;overflow:hidden;background:#fff}
+
+@media (max-width:1000px){
+  .manage-grid{grid-template-columns:1fr}
+  .map-container{order:2}
+}

@@ -1,0 +1,84 @@
+:root{
+  --gov-blue:#0B3C5D;
+  --saffron:#FF9933;
+  --gov-green:#138000;
+  --muted-bg:#f4f7fb;
+  --card-bg:#ffffff;
+  --muted-text:#55696d;
+}
+
+.citizen-dashboard{
+  padding:28px;
+  background:var(--muted-bg);
+  min-height:100vh;
+}
+.welcome-card{
+  background:var(--card-bg);
+  border-radius:8px;
+  padding:16px 18px;
+  box-shadow:0 4px 8px rgba(0,0,0,0.06);
+  margin-bottom:22px;
+  position:relative;
+}
+.gov-accent {
+  position: relative;
+}
+
+.gov-accent::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(to right, var(--saffron), #ffffff, var(--gov-green));
+  border-radius: 12px 12px 0 0;
+}
+.welcome-card h2{margin:0 0 6px;color:var(--gov-blue);font-size:20px}
+.welcome-card .welcome-sub{margin:0 0 12px;color:var(--muted-text);font-weight:600}
+.welcome-card p{margin:0 0 10px;color:var(--muted-text);line-height:1.45}
+.welcome-card ul{margin:8px 0 0 18px;color:var(--muted-text)}
+
+.quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+.action-card{background:#ffffff;padding:12px 14px;border-radius:8px;cursor:pointer;font-weight:700;box-shadow:0 4px 8px rgba(0,0,0,0.04);transition:transform .18s ease,box-shadow .18s ease,background .12s ease;border:1px solid #e3eaf2;display:flex;align-items:center;justify-content:space-between}
+.action-card:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,0.06);background:#ffffff}
+.action-left{display:flex;align-items:center;gap:12px}
+.action-label{font-size:15px}
+.action-right{font-weight:700;color:var(--gov-blue);font-size:14px;opacity:0.35;transition:opacity .12s ease,transform .12s ease}
+.action-card:hover .action-right{opacity:0.9;transform:translateX(4px)}
+.action-card .icon{color:var(--gov-blue)}
+.action-card .icon.accent{color:var(--saffron)}
+.action-card .icon.green{color:var(--gov-green)}
+
+/* User box (top-right identity) */
+/* user badge moved into header; styles maintained in Header.css */
+
+.followed-section{background:var(--card-bg);padding:16px 18px;border-radius:8px;margin-bottom:20px}
+.followed-section h3{margin-top:0;color:var(--gov-blue);display:flex;align-items:center;gap:8px;font-size:16px}
+.project-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.project-card{border:1px solid #e9eef5;padding:12px;border-radius:8px;display:flex;justify-content:space-between;align-items:center}
+.project-card .meta{color:var(--muted-text);font-size:13px}
+.project-card .name{font-weight:600;color:var(--gov-blue)}
+.project-card .controls button{padding:8px 12px;border-radius:8px;border:0;background:var(--gov-blue);color:#fff;cursor:pointer}
+
+.recent-section{background:transparent;padding:0;border-radius:0}
+.recent-section h3{margin-top:0;color:var(--gov-blue);font-size:16px}
+.recent-list{display:block;margin:8px 0 0 0;padding:0}
+.recent-item{display:flex;align-items:center;justify-content:space-between;padding:10px 6px;border-radius:0;background:transparent;text-decoration:none;color:inherit;transition:background .12s ease;border-bottom:1px solid #e8eef6}
+.recent-item:hover{background:#fbfcfe}
+.recent-icon{margin-right:10px;color:#777}
+.recent-main{flex:1;min-width:0;padding:6px 12px}
+.recent-name{font-weight:600;color:#072033}
+.recent-meta{font-size:12px;color:#6b7780;margin-top:4px}
+.recent-arrow{font-size:13px;color:#6b7780;margin-left:12px;opacity:0.35;transition:opacity .12s ease}
+.recent-item:hover .recent-arrow{opacity:0.9}
+
+.dashboard-footer{margin-top:18px;color:var(--muted-text);font-size:13px;text-align:center;padding:14px 6px}
+.section-divider{height:1px;background:#e3eaf2;margin:22px 0}
+.section-title{font-weight:700;letter-spacing:0.2px}
+.empty-state{color:var(--muted-text);padding:12px 8px;border-radius:6px;background:#fbfcfe}
+
+@media (max-width:800px){
+  .quick-actions{grid-template-columns:1fr}
+  .project-grid{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+}

@@ -3,13 +3,16 @@ import axios from 'axios'
 import { Link, useLocation } from 'react-router-dom'
 import { getToken, getUser, getUserScopedItem, setUserScopedItem } from '../utils/auth'
 import ProjectMap from '../components/ProjectMap'
+import './Home.css'
 
 export default function Home() {
   const [projects, setProjects] = useState([])
   const [err, setErr] = useState(null)
-  const [filters, setFilters] = useState({ state: '', department: '', status: '', minRating: 0, minBudgetPct: 0, maxBudgetPct: 100 })
+  const [filters, setFilters] = useState({ state: '', department: '', status: '', minRating: 0, name: '' })
+  const [mapFilters, setMapFilters] = useState({ state: '', department: '', status: '' })
   const [followed, setFollowed] = useState(new Set())
   const [myCommentProjectIds, setMyCommentProjectIds] = useState(null)
+  const [showMap, setShowMap] = useState(true)
 
   const location = useLocation()
   const urlFilter = new URLSearchParams(location.search).get('filter')
@@ -63,90 +66,162 @@ export default function Home() {
   }
 
   return (
-    <div>
-      <h2>Projects</h2>
-      {err && <div style={{ color: 'red' }}>{err}</div>}
-      <div style={{ display: 'flex', gap: 16 }}>
-        <div style={{ flex: 1 }}>
-          <h3>Browse Projects</h3>
-          <div style={{ marginBottom: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <select value={filters.state} onChange={e=>setFilters(f=>({...f, state: e.target.value}))}>
-              <option value=''>All states</option>
-              {Array.from(new Set(projects.map(p=>p.state).filter(Boolean))).map(s=> <option key={s} value={s}>{s}</option>)}
-            </select>
-            <select value={filters.department} onChange={e=>setFilters(f=>({...f, department: e.target.value}))}>
-              <option value=''>All departments</option>
-              {Array.from(new Set(projects.map(p=>p.department).filter(Boolean))).map(s=> <option key={s} value={s}>{s}</option>)}
-            </select>
-            <select value={filters.status} onChange={e=>setFilters(f=>({...f, status: e.target.value}))}>
-              <option value=''>All statuses</option>
-              {Array.from(new Set(projects.map(p=>p.status).filter(Boolean))).map(s=> <option key={s} value={s}>{s}</option>)}
-            </select>
-            <label style={{ display:'flex', alignItems:'center', gap:6 }}>
-              Min rating:
-              <select value={filters.minRating} onChange={e=>setFilters(f=>({...f, minRating: Number(e.target.value)}))}>
-                <option value={0}>Any</option>
-                <option value={1}>1+</option>
-                <option value={2}>2+</option>
-                <option value={3}>3+</option>
-                <option value={4}>4+</option>
-                <option value={5}>5</option>
-              </select>
-            </label>
-            <label style={{ display:'flex', alignItems:'center', gap:6 }}>
-              Budget %:
-              <input type="number" value={filters.minBudgetPct} onChange={e=>setFilters(f=>({...f, minBudgetPct: Number(e.target.value)}))} style={{ width: 60 }} />
-              —
-              <input type="number" value={filters.maxBudgetPct} onChange={e=>setFilters(f=>({...f, maxBudgetPct: Number(e.target.value)}))} style={{ width: 60 }} />
-            </label>
+    <div className="home-container">
+      <div className="home-title">Browse Projects</div>
+      {err && <div className="error-text">{err}</div>}
+
+      <div className={`home-grid ${!showMap ? 'map-hidden' : ''}`}>
+        <div className="left-col">
+          <div className="filter-box">
+            <h3>Filters</h3>
+            <div className="filter-row top">
+              <div className="filter-field">
+                <label className="filter-label">State</label>
+                <select className="filter-control" value={filters.state} onChange={e=>setFilters(f=>({...f, state: e.target.value}))}>
+                  <option value=''>All states</option>
+                  {Array.from(new Set(projects.map(p=>p.state).filter(Boolean))).map(s=> <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div className="filter-field">
+                <label className="filter-label">Department</label>
+                <select className="filter-control" value={filters.department} onChange={e=>setFilters(f=>({...f, department: e.target.value}))}>
+                  <option value=''>All departments</option>
+                  {Array.from(new Set(projects.map(p=>p.department).filter(Boolean))).map(s=> <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div className="filter-field">
+                <label className="filter-label">Status</label>
+                <select className="filter-control" value={filters.status} onChange={e=>setFilters(f=>({...f, status: e.target.value}))}>
+                  <option value=''>All statuses</option>
+                  {Array.from(new Set(projects.map(p=>p.status).filter(Boolean))).map(s=> <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="filter-row bottom">
+              <div className="filter-field small">
+                <label className="filter-label">Min rating</label>
+                <select className="filter-control" value={filters.minRating} onChange={e=>setFilters(f=>({...f, minRating: Number(e.target.value)}))}>
+                  <option value={0}>Any</option>
+                  <option value={1}>1+</option>
+                  <option value={2}>2+</option>
+                  <option value={3}>3+</option>
+                  <option value={4}>4+</option>
+                  <option value={5}>5</option>
+                </select>
+              </div>
+              <div className="filter-field">
+                <label className="filter-label">Project name</label>
+                <input type="text" className="filter-control" placeholder="Search by name" value={filters.name} onChange={e=>setFilters(f=>({...f, name: e.target.value}))} />
+              </div>
+            </div>
+
+            <div className="filter-actions">
+              <button
+                className="map-toggle"
+                onClick={() => setShowMap(s => !s)}
+              >
+                {showMap ? '🗺️ Hide map view' : '🗺️ Filter projects by map'}
+              </button>
+            </div>
           </div>
 
-          <div style={{ display: 'grid', gap: 12 }}>
-            {projects.filter(p => {
-              if (filters.state && (p.state || '') !== filters.state) return false
-              if (filters.department && (p.department || '') !== filters.department) return false
-              if (filters.status && (p.status || '') !== filters.status) return false
-              // support URL filters: followed and mycomments
-              if (urlFilter === 'followed') {
-                const f = JSON.parse(getUserScopedItem('followed_projects') || '[]')
-                if (!f.includes(p.id)) return false
-              }
-              if (urlFilter === 'mycomments') {
-                if (!myCommentProjectIds) return false // loading
-                if (!myCommentProjectIds.has(p.id)) return false
-              }
-              const avg = (p.avg_rating !== null && p.avg_rating !== undefined) ? Number(p.avg_rating) : 0
-              if ((avg || 0) < (filters.minRating || 0)) return false
-              const total = p.budget_total || 0
-              const used = p.budget_used || 0
-              const pct = total > 0 ? Math.round((used/total)*100) : 0
-              if (pct < (filters.minBudgetPct || 0) || pct > (filters.maxBudgetPct || 100)) return false
-              return true
-            }).map(p => (
-              <div key={p.id} style={{ padding: 12, border: '1px solid #ddd', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <Link to={`/projects/${p.id}`} style={{ fontSize: 16, fontWeight: 600 }}>{p.name}</Link>
-                  <div style={{ marginTop: 6 }}>
-                    <span style={{ padding: '4px 8px', borderRadius: 12, background: p.status === 'Active' ? '#e8f5e9' : p.status === 'Halted' ? '#fff3e0' : p.status === 'ffebee', color: p.status === 'Active' ? '#2e7d32' : p.status === 'Halted' ? '#ef6c00' : '#c62828' }}>{p.status || 'Unknown'}</span>
-                    <span style={{ marginLeft: 12 }}>{p.department || ''}</span>
-                    <div style={{ marginTop: 6 }}>Budget used: {p.budget_total ? `${Math.round((p.budget_used||0)/p.budget_total*100)}%` : '—'}</div>
-                    <div style={{ marginTop: 6 }}>Avg rating: {(p.avg_rating !== null && p.avg_rating !== undefined) ? renderStars(Math.round(Number(p.avg_rating))) : '—'}</div>
+          {showMap && (
+            <div className="map-container">
+                <div className="map-toolbar">
+                  <div className="map-toolbar-title">Map</div>
+                  <div className="map-toolbar-controls">
+                    <select className="filter-control" value={mapFilters.state} onChange={e=>setMapFilters(m=>({...m, state: e.target.value}))}>
+                      <option value=''>All states</option>
+                      {Array.from(new Set(projects.map(p=>p.state).filter(Boolean))).map(s=> <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    <select className="filter-control" value={mapFilters.department} onChange={e=>setMapFilters(m=>({...m, department: e.target.value}))}>
+                      <option value=''>All departments</option>
+                      {Array.from(new Set(projects.map(p=>p.department).filter(Boolean))).map(s=> <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    <select className="filter-control" value={mapFilters.status} onChange={e=>setMapFilters(m=>({...m, status: e.target.value}))}>
+                      <option value=''>All statuses</option>
+                      {Array.from(new Set(projects.map(p=>p.status).filter(Boolean))).map(s=> <option key={s} value={s}>{s}</option>)}
+                    </select>
                   </div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
-                  {!(user && user.role && (String(user.role).toLowerCase() === 'official' || String(user.role).toLowerCase() === 'admin')) && (
-                    <button onClick={() => toggleFollow(p.id)} style={{ fontSize: 18 }} title="Follow project">{followed.has(p.id) ? '★' : '☆'}</button>
-                  )}
-                  <Link to={`/projects/${p.id}`}><button>View</button></Link>
+              <ProjectMap projects={projects} mapFilters={mapFilters} />
+            </div>
+          )}
+
+          <section className="projects-section">
+            <h3 className="section-heading">Projects</h3>
+            <div className="projects-list">
+              {projects.filter(p => {
+                if (filters.state && (p.state || '') !== filters.state) return false
+                if (filters.department && (p.department || '') !== filters.department) return false
+                if (filters.status && (p.status || '') !== filters.status) return false
+                if (urlFilter === 'followed') {
+                  const f = JSON.parse(getUserScopedItem('followed_projects') || '[]')
+                  if (!f.includes(p.id)) return false
+                }
+                if (urlFilter === 'mycomments') {
+                  if (!myCommentProjectIds) return false
+                  if (!myCommentProjectIds.has(p.id)) return false
+                }
+                const avg = (p.avg_rating !== null && p.avg_rating !== undefined) ? Number(p.avg_rating) : 0
+                if ((avg || 0) < (filters.minRating || 0)) return false
+                // filter by name (substring, case-insensitive)
+                if (filters.name && !(String(p.name || '').toLowerCase().includes(filters.name.trim().toLowerCase()))) return false
+                return true
+              }).map(p => (
+                <div key={p.id} className="project-card">
+                  <div className="project-info-col">
+                    <Link to={`/projects/${p.id}`} className="project-title">{p.name}</Link>
+
+                    <div className="project-meta-row">
+                      <span className={`status-badge status-${String(p.status || 'unknown').toLowerCase()}`}>{p.status || 'Unknown'}</span>
+                      <span className="project-department">{p.department || ''}</span>
+                      <div className="project-rating">
+                        {(p.avg_rating !== null && p.avg_rating !== undefined)
+                          ? renderStars(Math.round(Number(p.avg_rating)))
+                          : <em className="rating-muted">Not rated yet</em>
+                        }
+                      </div>
+                    </div>
+
+                    <div className="budget-section">
+                      {
+                        (() => {
+                          if (p.budget_total) {
+                            const percent = Math.round((p.budget_used||0)/p.budget_total*100)
+                            return (
+                              <>
+                                <div className="budget-bar"><div className="budget-fill" style={{ width: `${percent}%` }} /></div>
+                                <div className="budget-label">{percent}% budget used</div>
+                              </>
+                            )
+                          }
+                          return (
+                            <>
+                              <div className="project-rating">{p.rating ? <span className="rating-stars">{p.rating} ★</span> : <em className="rating-muted">Not rated yet</em>}</div>
+                              <div className="budget-bar"><div className="budget-fill budget-empty" style={{ width: `0%` }} /></div>
+                              <div className="budget-label">No budget info</div>
+                            </>
+                          )
+                        })()
+                      }
+                    </div>
+                  </div>
+
+                  <div className="project-actions">
+                    {!(user && user.role && (String(user.role).toLowerCase() === 'official' || String(user.role).toLowerCase() === 'admin')) && (
+                      <button className="follow-btn" onClick={() => toggleFollow(p.id)} title="Follow project">{followed.has(p.id) ? '★' : '☆'}</button>
+                    )}
+                    <Link to={`/projects/${p.id}`} className="btn-primary">View →</Link>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </section>
         </div>
-        <div style={{ flex: 2 }}>
-          <h3>Map</h3>
-          <ProjectMap projects={projects} />
-        </div>
+
+        
       </div>
     </div>
   )

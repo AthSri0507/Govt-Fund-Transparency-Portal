@@ -1,17 +1,20 @@
 import React, { useState } from 'react'
 import axios from 'axios'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { setToken, setUser } from '../utils/auth'
+import './login.css'
 
 export default function Login() {
-  const [email, setEmail] = useState('official@example.com')
-  const [password, setPassword] = useState('OfficialPass123!')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
   async function submit(e) {
     e.preventDefault()
     setError(null)
+    setLoading(true)
     try {
       const res = await axios.post('/api/auth/login', { email, password })
       const token = res.data && res.data.accessToken
@@ -19,7 +22,6 @@ export default function Login() {
       if (token) {
         setToken(token)
         setUser(user)
-        // redirect based on role
         const role = (user && user.role) || 'Citizen'
         if (role.toLowerCase() === 'official') navigate('/dashboard/official')
         else if (role.toLowerCase() === 'admin') navigate('/dashboard/admin')
@@ -29,24 +31,62 @@ export default function Login() {
       }
     } catch (e) {
       setError(e.response?.data?.message || e.message)
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
-    <div style={{ maxWidth: 600 }}>
-      <h2>Login</h2>
-      <form onSubmit={submit}>
-        <div style={{ marginBottom: 8 }}>
-          <label>Email</label><br />
-          <input value={email} onChange={e => setEmail(e.target.value)} />
+    <div className="login-page">
+      <div className="login-wrap">
+        <div className="login-card" role="main" aria-labelledby="login-heading">
+          <div className="login-brand">
+            <div className="login-icon" aria-hidden>🔒</div>
+          </div>
+          <h1 id="login-heading" className="login-title">Login</h1>
+          <p className="login-sub">Access your account securely.</p>
+
+          <form className="login-form" onSubmit={submit} noValidate>
+            <label className="login-label" htmlFor="email">Email</label>
+            <input
+              id="email"
+              className="login-input"
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="you@domain.gov"
+              required
+              aria-invalid={!!error}
+            />
+            {error && <div className="login-error">{error}</div>}
+
+            <label className="login-label" htmlFor="password">Password</label>
+            <input
+              id="password"
+              className="login-input"
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Your password"
+              required
+            />
+
+            <div className="login-row">
+              <Link to="/forgot" className="login-forgot">Forgot password?</Link>
+            </div>
+
+            <button className="login-btn" type="submit" disabled={loading} aria-busy={loading}>
+              {loading ? 'Signing in…' : 'Login'}
+            </button>
+          </form>
+
+          <div className="login-divider" aria-hidden />
+
+          <div className="login-footer">
+            <div>Don’t have an account? <Link to="/register" className="login-register-link">Register</Link></div>
+          </div>
         </div>
-        <div style={{ marginBottom: 8 }}>
-          <label>Password</label><br />
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)} />
-        </div>
-        <button type="submit">Login</button>
-      </form>
-      {error && <div style={{ color: 'red', marginTop: 8 }}>{error}</div>}
+      </div>
     </div>
   )
 }

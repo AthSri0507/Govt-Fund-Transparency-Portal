@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { Link } from 'react-router-dom'
 import { getToken } from '../utils/auth'
+import './ManageProjects.css'
 
 export default function ManageProjects() {
   const [projects, setProjects] = useState([])
   const [err, setErr] = useState(null)
+  const [filterName, setFilterName] = useState('')
 
   useEffect(() => {
     loadProjects()
@@ -49,57 +51,82 @@ export default function ManageProjects() {
   }
 
   return (
-    <div>
-      <h2>Manage Projects</h2>
-      {err && <div style={{ color: 'red' }}>{err}</div>}
+    <div className="manage-container">
+      <div className="manage-title">Manage Projects</div>
+      {err && <div className="error-text">{err}</div>}
 
-      <section>
-        <h3>Your Projects</h3>
-        <div>
-          {projects.map(p => (
-            <div key={p.id} style={{ border: '1px solid #ddd', padding: 12, marginBottom: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h4 style={{ margin: 0 }}>{p.name} <StatusBadge status={p.status} /></h4>
-                <div>
-                  {p.status !== 'Disabled' ? (
-                      <button onClick={async ()=>{
-                        const ok = window.confirm('Disabling a project hides it from citizens. Are you sure you want to disable this project?')
-                        if (!ok) return
-                        try {
-                          const token = getToken()
-                          await axios.post(`/api/projects/${p.id}/disable`, {}, { headers: { Authorization: `Bearer ${token}` } })
-                          await loadProjects()
-                        } catch(e){ alert(e.response?.data?.message || e.message) }
-                      }}>Disable</button>
-                    ) : (
-                      <button onClick={async ()=>{
-                        const ok = window.confirm('Restore this project and make it visible to citizens?')
-                        if (!ok) return
-                        try {
-                          const token = getToken()
-                          await axios.post(`/api/projects/${p.id}/restore`, {}, { headers: { Authorization: `Bearer ${token}` } })
-                          await loadProjects()
-                        } catch(e){ alert(e.response?.data?.message || e.message) }
-                      }}>Restore</button>
-                    )}
-                </div>
-              </div>
-              <div>{p.description}</div>
-              <div>Budget total: {p.budget_total} · Used: {p.budget_used}</div>
-              <div style={{ marginTop: 8 }}>
-                <AddFundForm projectId={p.id} onDone={() => loadProjects()} addFund={addFund} />
-              </div>
-              <div style={{ marginTop: 8 }}>
-                <AddUpdateForm projectId={p.id} addUpdate={addUpdate} />
-              </div>
-              <div style={{ marginTop: 8 }}>
-                <Link to={`/projects/${p.id}`}>View Project</Link>
-                <Link to={`/projects/${p.id}/timeline`} style={{ marginLeft: 12 }}>View Timeline</Link>
-              </div>
+      <div className="manage-grid">
+        <div className="left-col">
+          <div className="filter-box">
+            <h3>Filters</h3>
+            <div className="filter-row">
+              <input
+                className="filter-item"
+                placeholder="Filter by project name"
+                value={filterName}
+                onChange={e => setFilterName(e.target.value)}
+              />
             </div>
-          ))}
+          </div>
+
+          <section className="projects-section">
+            <h3 className="section-heading">Your Projects</h3>
+            <div className="projects-list">
+              {projects
+                .filter(p => !filterName || String(p.name || '').toLowerCase().includes(filterName.trim().toLowerCase()))
+                .map(p => (
+                <div key={p.id} className="project-card">
+                  <div className="project-header">
+                    <h4 className="project-title">{p.name} <StatusBadge status={p.status} /></h4>
+                    <div className="project-actions">
+                      {p.status !== 'Disabled' ? (
+                        <button className="btn-secondary" onClick={async ()=>{
+                          const ok = window.confirm('Disabling a project hides it from citizens. Are you sure you want to disable this project?')
+                          if (!ok) return
+                          try {
+                            const token = getToken()
+                            await axios.post(`/api/projects/${p.id}/disable`, {}, { headers: { Authorization: `Bearer ${token}` } })
+                            await loadProjects()
+                          } catch(e){ alert(e.response?.data?.message || e.message) }
+                        }}>Disable</button>
+                      ) : (
+                        <button className="btn-secondary" onClick={async ()=>{
+                          const ok = window.confirm('Restore this project and make it visible to citizens?')
+                          if (!ok) return
+                          try {
+                            const token = getToken()
+                            await axios.post(`/api/projects/${p.id}/restore`, {}, { headers: { Authorization: `Bearer ${token}` } })
+                            await loadProjects()
+                          } catch(e){ alert(e.response?.data?.message || e.message) }
+                        }}>Restore</button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="project-body">{p.description}</div>
+                  <div className="project-meta">Budget total: {p.budget_total} · Used: {p.budget_used}</div>
+
+                  <div className="form-row">
+                    <AddFundForm projectId={p.id} onDone={() => loadProjects()} addFund={addFund} />
+                  </div>
+
+                  <div className="form-row">
+                    <AddUpdateForm projectId={p.id} addUpdate={addUpdate} />
+                  </div>
+
+                  <div className="project-links">
+                    <Link to={`/projects/${p.id}`} className="btn-primary">View Project</Link>
+                    <Link to={`/projects/${p.id}/timeline`} className="link-muted">View Timeline</Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
-      </section>
+
+        <div className="map-container">
+          {/* Map is placed here for layout; existing map initialization logic (if any) remains untouched */}
+        </div>
+      </div>
     </div>
   )
 }
@@ -133,11 +160,11 @@ function AddFundForm({ projectId, addFund, onDone }) {
         setSubmitting(false)
       }
     }}>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="amount" />
-        <input value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="purpose" />
-        <button type="submit" disabled={submitting}>{submitting ? 'Adding...' : 'Add Fund'}</button>
-      </div>
+        <div className="form-inline">
+          <input className="input-small" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="amount" />
+          <input className="input-flex" value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="purpose" />
+          <button className="btn-primary" type="submit" disabled={submitting}>{submitting ? 'Adding...' : 'Add Fund'}</button>
+        </div>
       {localErr && <div style={{ color: 'red' }}>{localErr}</div>}
     </form>
   )
@@ -160,9 +187,9 @@ function AddUpdateForm({ projectId, addUpdate }) {
         setSubmitting(false)
       }
     }}>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <input style={{ flex: 1 }} value={text} onChange={e => setText(e.target.value)} placeholder="Timeline update (optional status)" />
-        <button type="submit" disabled={submitting}>{submitting ? 'Posting...' : 'Post Update'}</button>
+      <div className="form-inline">
+        <input className="input-flex" value={text} onChange={e => setText(e.target.value)} placeholder="Timeline update (optional status)" />
+        <button className="btn-primary" type="submit" disabled={submitting}>{submitting ? 'Posting...' : 'Post Update'}</button>
       </div>
       {localErr && <div style={{ color: 'red' }}>{localErr}</div>}
     </form>

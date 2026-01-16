@@ -1,0 +1,72 @@
+:root{--chakra-blue:#0B3C5D;--saffron:#FF9933;--muted-gray:#f2f6f8}
+.top-strip{background:var(--muted-gray);color:var(--chakra-blue);font-size:13px;padding:6px 12px;text-align:center;border-bottom:1px solid rgba(11,60,93,0.04)}
+.site-header{display:flex;align-items:center;justify-content:space-between;padding:8px 18px;background:#fff;box-shadow:0 2px 6px rgba(3,18,32,0.04);border-bottom:2px solid rgba(11,60,93,0.06);position:relative}
+.site-header:after{content:'';display:block;height:3px;background:linear-gradient(90deg,#FF9933,#ffffff,#138808);opacity:0.95;margin-top:8px}
+.header-brand{display:flex;align-items:center;gap:18px;text-decoration:none;color:inherit}
+.header-logo{width:56px;height:56px;object-fit:contain;border-radius:8px}
+.portal-title{font-weight:800;font-size:18px;color:var(--chakra-blue);line-height:1}
+.portal-sub{font-size:12px;color:#6b7b86;opacity:0.9;margin-top:2px}
+.header-actions{display:flex;gap:12px;align-items:center;margin-left:auto}
+
+/* Make header action buttons visually consistent on Landing */
+.site-header.landing .header-actions .btn{
+  box-sizing: border-box;
+  min-width:128px;
+  width:128px;
+  height:44px;
+  padding:0 16px;
+  font-size:15px;
+  line-height:44px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:10px;
+}
+
+.site-header.landing .btn-login{background:transparent;border:2px solid var(--chakra-blue);color:var(--chakra-blue)}
+.site-header.landing .btn-register{background:var(--saffron);color:#062233}
+
+/* Variant: auth (minimal) */
+.site-header.auth{padding:6px 12px;background:transparent;box-shadow:none;border-bottom:0}
+.site-header.auth:after{display:none}
+.site-header.auth .header-brand .portal-title{font-size:16px}
+.site-header.auth .header-brand .portal-sub{display:none}
+.site-header.auth .header-logo{width:48px;height:48px}
+.site-header.auth .header-actions{}
+.site-header.auth .btn-login,.site-header.auth .btn-register{opacity:0.8}
+.site-header.auth .btn-register{padding:6px 10px;font-size:13px}
+
+/* make auth header buttons same size as landing for consistency */
+.site-header.auth .header-actions .btn{
+  box-sizing: border-box;
+  width:128px;
+  height:44px;
+  padding:0 16px;
+  font-size:15px;
+  line-height:44px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:10px;
+}
+
+/* Variant: landing (explicit for clarity) */
+.site-header.landing{padding:12px 18px;background:#fff;border-bottom:2px solid rgba(11,60,93,0.06);box-shadow:0 2px 6px rgba(3,18,32,0.04)}
+.btn{padding:8px 12px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-flex;align-items:center;justify-content:center;transition:transform .14s ease,box-shadow .14s ease}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(2,10,20,0.06)}
+.btn-login{border:2px solid var(--chakra-blue);color:var(--chakra-blue);background:transparent}
+.btn-login:hover{box-shadow:0 8px 18px rgba(11,60,93,0.08)}
+.btn-register{background:var(--saffron);color:#062233;border:0;box-shadow:0 8px 20px rgba(255,153,51,0.12)}
+.btn-register:hover{filter:brightness(.98);box-shadow:0 14px 32px rgba(255,153,51,0.12)}
+.user-block{display:flex;align-items:center;gap:12px;background:#fff;padding:8px 12px;border-radius:12px;box-shadow:0 6px 18px rgba(3,18,32,0.06)}
+.user-avatar{width:36px;height:36px;background:#0b3c5d;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px}
+.user-info{display:flex;flex-direction:column;line-height:1.05;margin-right:8px}
+.user-name{font-weight:600;color:var(--chakra-blue);font-size:14px}
+.user-role{font-size:12px;color:#55696d}
+.user-menu{border:none;background:#f4f7fb;border-radius:8px;padding:6px 8px;font-size:13px;cursor:pointer}
+
+@media (max-width:760px){
+  .header-logo{width:56px;height:56px}
+  .portal-title{font-size:16px}
+  .site-header{padding:10px}
+}

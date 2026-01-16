@@ -1,0 +1,100 @@
+:root{
+  --gov-blue:#0B3C5D;
+  --gov-saffron:#FF9933;
+  --muted:#f6f8f9;
+}
+
+.register-page{
+  min-height:100vh;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding-top:80px;
+  padding-bottom:80px;
+  padding-left:28px;
+  padding-right:28px;
+  background: linear-gradient(180deg, #f8fafb 0%, #f4f7f8 60%);
+  position:relative;
+  overflow:hidden;
+}
+
+.register-page::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:120px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255,153,51,0.12),
+    rgba(255,255,255,0.9),
+    rgba(19,136,8,0.05)
+  );
+  pointer-events:none;
+  z-index:0;
+}
+
+.register-card{
+  width:680px;
+  max-width:95%;
+  background:#ffffff;
+  border-radius:12px;
+  padding:36px 30px 28px;
+  box-shadow:0 22px 50px rgba(3,18,32,0.12);
+  border:1px solid #e3e9ed;
+  position:relative;
+  z-index:1;
+}
+
+.register-brand{font-size:28px;text-align:center;margin-bottom:6px}
+.register-brand{font-size:32px;text-align:center;margin-bottom:6px;color:var(--gov-blue)}
+.brand-divider{width:50px;height:3px;background:linear-gradient(to right,#FF9933,#138808);margin:6px auto 14px;border-radius:2px}
+.register-title{font-size:2.2rem;font-weight:700;color:var(--gov-blue);text-align:center;margin:6px 0}
+.register-sub{font-size:15px;color:#55696d;text-align:center;margin:0 0 18px}
+.gov-note{font-size:12px;color:#6b7b86;text-align:center;margin-top:4px}
+
+.section-header{font-size:14.5px;color:#0B3C5D;font-weight:700;margin-top:2rem;margin-bottom:8px;border-bottom:1px solid #e2edf2;padding-bottom:6px}
+.section-header::before{content:"";display:inline-block;width:4px;height:14px;background:linear-gradient(to bottom,#FF9933,#138808);margin-right:8px;border-radius:2px}
+.register-form{display:flex;flex-direction:column;gap:12px}
+.form-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:8px}
+.form-row.two-thirds{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+.form-row.right{justify-content:flex-end}
+.form-group{flex:1;display:flex;flex-direction:column;min-width:200px}
+.form-group.state{flex:0 0 220px;width:220px}
+.label{font-size:14px;color:#4f6367;margin-bottom:10px;line-height:1.3}
+.input{padding:10px 14px;border-radius:8px;border:1.5px solid #cfdfe5;background:#fff;font-size:15px;height:46px;outline:none;transition:box-shadow .12s ease,border-color .12s ease}
+.input{margin-top:2px}
+.input:focus{border-color:var(--gov-blue);box-shadow:0 0 0 2px rgba(11,60,93,0.15)}
+.input:disabled{background:#f2f5f7;cursor:not-allowed;opacity:0.9}
+.input.error{border-color:#c33}
+.field-error{color:#b8231b;font-size:12px;margin-top:6px}
+.hint{font-size:12px;color:#6b7b86;margin-top:6px}
+
+.identity-block{background:#f7fbfd;padding:20px;border-radius:10px;border:1px solid #e2edf2;margin-top:8px}
+
+.form-actions{display:flex;align-items:center;justify-content:center;margin-top:10px}
+.req-note{font-size:13px;color:#6b7b86;text-align:center;margin:16px 0 8px}
+.register-btn{background:var(--gov-blue);color:#fff;padding:14px;font-size:16px;width:100%;border-radius:12px;border:0;font-weight:700;letter-spacing:0.3px;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease;height:50px}
+.register-btn:hover{transform:translateY(-2px);box-shadow:0 26px 60px rgba(3,18,32,0.16)}
+.register-btn[disabled]{opacity:0.6;cursor:not-allowed}
+
+.form-error{color:#b8231b;margin-top:10px}
+.register-footer{text-align:center;margin-top:16px;color:#425e63;font-size:14px}
+.register-footer .link{color:var(--gov-saffron);font-weight:700;text-decoration:none}
+
+@media (max-width:1100px){
+  .register-card{width:560px}
+}
+
+@media (max-width:920px){
+  .register-card{width:520px}
+}
+
+@media (max-width:680px){
+  .register-card{width:100%;padding:18px}
+  .form-row{flex-direction:column}
+  .form-row.two-thirds{display:flex;flex-direction:column}
+  .form-group{width:100%;min-width:0}
+  .form-group.state{width:100%;flex:1}
+}

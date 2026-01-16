@@ -1,0 +1,100 @@
+:root{
+  --gov-blue:#0B3C5D;
+  --gov-saffron:#FF9933;
+  --muted:#f4f7f8;
+  --card-shadow: 0 18px 40px rgba(11,60,93,0.06);
+}
+
+/* Page background + centering */
+.login-page{
+  min-height: calc(100vh - 72px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 24px;
+  position:relative;
+  overflow:hidden;
+}
+
+/* background image layer with reduced saturation */
+.login-page::before{
+  content:'';
+  position:absolute;inset:0;
+  background:url('../assets/tricolourbg.jpeg') center/cover no-repeat;
+  filter: saturate(85%);
+  z-index:0;
+}
+
+/* translucent overlay above the image to keep content readable */
+.login-page::after{
+  content:'';
+  position:absolute;inset:0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.62), rgba(244,247,248,0.62));
+  z-index:1;
+}
+
+.login-wrap{width:100%;max-width:520px;padding:20px;position:relative;z-index:3}
+
+/* subtle radial glow behind the card for depth (above overlay) */
+.login-wrap::before{content:'';position:absolute;left:50%;top:30%;transform:translateX(-50%);width:520px;height:320px;border-radius:50%;background:radial-gradient(closest-side, rgba(255,153,51,0.10), rgba(11,60,93,0.03) 40%, transparent 60%);filter:blur(28px);z-index:2;pointer-events:none}
+
+/* Card */
+.login-card{
+  background:#fff;
+  border-radius:14px;
+  box-shadow: 0 30px 80px rgba(11,60,93,0.10);
+  padding:28px 28px 22px;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  position:relative;
+  z-index:1;
+  border:1px solid rgba(255,255,255,0.6);
+  backdrop-filter: blur(6px);
+}
+
+/* brand icon */
+.login-brand{display:flex;justify-content:center;margin-bottom:10px}
+.login-icon{width:76px;height:76px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:32px;position:relative}
+.login-icon{background:linear-gradient(180deg, rgba(11,60,93,0.04), rgba(11,60,93,0.02));}
+/* faint colored halo behind the icon */
+.login-icon::before{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:120px;height:120px;border-radius:50%;background:radial-gradient(circle at center, rgba(255,153,51,0.12), rgba(255,153,51,0.04) 35%, transparent 55%);z-index:-1}
+
+.login-title{font-size:24px;color:var(--gov-blue);text-align:center;margin:8px 0 6px;font-weight:800}
+.login-sub{font-size:13px;color:#4b6368;text-align:center;margin:0 0 18px}
+
+/* form */
+.login-form{display:flex;flex-direction:column;gap:14px}
+.login-label{font-size:12px;color:#6b7b86;margin-bottom:6px}
+.login-input{padding:12px 14px;border-radius:10px;border:1px solid #e6eef0;font-size:15px;outline:none;transition:box-shadow .22s ease,border-color .18s ease,transform .12s ease}
+.login-input:focus{border-color:var(--gov-blue);box-shadow:0 10px 30px rgba(11,60,93,0.08), 0 0 0 4px rgba(11,60,93,0.04);transform:translateY(-1px)}
+
+.login-error{color:#b8231b;font-size:13px;margin-top:-6px;margin-bottom:6px}
+
+.login-row{display:flex;justify-content:flex-end;margin-top:8px}
+.login-forgot{font-size:11px;color:#5b6b6f;opacity:0.85;text-decoration:none}
+.login-forgot:hover{text-decoration:underline}
+
+/* button */
+.login-btn{margin-top:8px;background:var(--gov-saffron);color:#062233;border:0;padding:12px 16px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease,filter .08s ease}
+.login-btn:hover{transform:translateY(-1px);box-shadow:0 20px 44px rgba(255,153,51,0.14);filter:brightness(.95)}
+.login-btn:active{transform:translateY(0);filter:brightness(.92)}
+.login-btn[disabled]{opacity:0.6;cursor:not-allowed;transform:none;box-shadow:none}
+
+.login-divider{height:1px;background:linear-gradient(90deg, rgba(11,60,93,0.04), rgba(11,60,93,0.02));margin:18px 0;border-radius:2px}
+.login-divider{background-image:linear-gradient(90deg, rgba(11,60,93,0.04), rgba(11,60,93,0.02));}
+
+.login-footer{font-size:14px;color:#425e63;text-align:center;padding-bottom:6px}
+.login-register-link{color:var(--gov-saffron);font-weight:800;text-decoration:none}
+.login-register-link:hover{text-decoration:underline}
+
+/* reduce emphasis of header actions only for auth variant */
+.site-header.auth .btn-login, .site-header.auth .btn-register{opacity:0.55;transform:none}
+.site-header.auth .btn-register{padding:6px 10px;font-size:13px}
+
+/* responsive tweaks */
+@media (max-width:520px){
+  .login-wrap{padding:8px}
+  .login-card{padding:20px}
+  .login-icon{width:56px;height:56px;font-size:22px}
+}

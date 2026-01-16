@@ -10,10 +10,10 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png'
 })
 
-export default function ProjectMap({ projects = [], single = false }){
+export default function ProjectMap({ projects = [], single = false, mapFilters = { state: '', department: '', status: '' } }){
   const mapRef = useRef(null)
   const layerRef = useRef(null)
-  const [filters, setFilters] = useState({ state: '', department: '', status: '' })
+  const filters = mapFilters || { state: '', department: '', status: '' }
 
   useEffect(()=>{
     if (!mapRef.current) {
@@ -64,35 +64,13 @@ export default function ProjectMap({ projects = [], single = false }){
     }
   }, [projects, filters])
 
-  // build filter option sets
+  // build filter option sets (used by parent toolbar if needed)
   const regions = Array.from(new Set(projects.map(p => p.state).filter(Boolean)))
   const departments = Array.from(new Set(projects.map(p => p.department).filter(Boolean)))
   const statuses = Array.from(new Set(projects.map(p => p.status).filter(Boolean)))
 
   return (
     <div>
-      {!single && (
-        <div style={{ marginBottom: 8 }}>
-          <label style={{ marginRight: 8 }}>State:
-            <select value={filters.state} onChange={e=>setFilters(f=>({...f, state: e.target.value}))}>
-              <option value="">(all)</option>
-              {regions.map(r => <option key={r} value={r}>{r}</option>)}
-            </select>
-          </label>
-          <label style={{ marginRight: 8 }}>Department:
-            <select value={filters.department} onChange={e=>setFilters(f=>({...f, department: e.target.value}))}>
-              <option value="">(all)</option>
-              {departments.map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
-          </label>
-          <label style={{ marginRight: 8 }}>Status:
-            <select value={filters.status} onChange={e=>setFilters(f=>({...f, status: e.target.value}))}>
-              <option value="">(all)</option>
-              {statuses.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </label>
-        </div>
-      )}
       <div id="project-map" style={{ height: 400, width: '100%', border: '1px solid #ddd' }} />
     </div>
   )
