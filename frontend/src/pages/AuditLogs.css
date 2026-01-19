@@ -1,0 +1,273 @@
+/* Audit Logs - government-grade styling */
+
+.audit-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  color: #111827;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+}
+
+.audit-header {
+  margin-bottom: 16px;
+}
+
+.audit-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  color: #0b2545;
+}
+
+.filters-card {
+  background: #ffffff;
+  border: 1px solid #e6e9ee;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.filters-card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* rows gap: 20px */
+}
+
+.filters-row {
+  display: flex;
+  gap: 16px; /* items gap: 12-16px */
+  align-items: center;
+  flex-wrap: nowrap; /* keep single-line rows */
+}
+
+/* Parent grid wrapper for strict rows spacing */
+.audit-filters-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  align-items: stretch;
+}
+
+.filters-row.first-row { gap: 16px; }
+.filters-row.second-row { gap: 12px; }
+.combined-row { flex-wrap: nowrap; align-items: center; }
+
+/* Row 1: strict 3-column grid */
+.filters-row-1 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+
+/* Row 2: inline quick filters and clear button */
+.filters-row-2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+/* Row 3: left and right containers */
+.filters-row-3 {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.filters-left { display: flex; align-items: center; gap: 12px; }
+.filters-actions { display: flex; gap: 12px; align-items: center; }
+.filters-right { display: flex; align-items: center; }
+
+/* Make Filter and Clear buttons visually match other rounded buttons */
+.filters-actions button {
+  background: #ffffff;
+  border: 1px solid #e6e9ee;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.filters-actions button:first-child {
+  /* slightly stronger emphasis for the primary Filter button */
+  background: #0b5fff;
+  color: #fff;
+  border: none;
+}
+
+/* Nudge the primary Filter button slightly upward to align visually */
+.audit-filters-grid .filters-actions button:first-child {
+  transform: translateY(-4px);
+}
+/* Nudge the Clear button (secondary) to vertically align with the primary Filter */
+.audit-filters-grid .filters-actions button:last-child {
+  transform: translateY(-4px);
+}
+
+.quick-filter-bar button { white-space: nowrap; }
+
+.filter-item {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  color: #374151;
+  min-width: 0;
+  flex: 1 1 0; /* equal-width inputs */
+}
+
+/* For checkbox labels inside the audit filters, lay out horizontally */
+.audit-filters-grid .filter-item.checkbox-item {
+  flex-direction: row;
+  align-items: center;
+  flex: 0 0 auto;
+  white-space: nowrap; /* keep checkbox and label on one line */
+}
+
+/* Ensure the left container doesn't wrap its contents */
+.filters-left { flex-wrap: nowrap; }
+
+/* Prevent the checkbox text from breaking onto multiple lines */
+.audit-filters-grid .filter-item.checkbox-item .checkbox-text {
+  white-space: nowrap;
+}
+
+.filter-item input[type="text"], .filter-item input[type="search"], .filter-item input, .search-input {
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  width: 100%;
+  background: #fff;
+  font-size: 14px;
+}
+
+.checkbox-item { display: flex; align-items: center; gap: 10px; }
+.checkbox-text { margin-left: 6px; }
+.inline-checkbox { margin-left: 0; }
+
+.filter-action { margin-left: 0; }
+
+.filter-action button {
+  background: #0b5fff;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.quick-filter-bar {
+  background: #fafbfc;
+  padding: 8px;
+  border-radius: 6px;
+  display: flex;
+  gap: 12px; /* buttons gap: 10-12px requested */
+  align-items: center;
+  justify-content: flex-start; /* left aligned */
+  flex-wrap: nowrap; /* single line */
+}
+
+.quick-filter-bar button {
+  background: #ffffff;
+  border: 1px solid #e6e9ee;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.toolbar-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.toolbar-left { flex: 1 1 auto; }
+.toolbar-right { display: flex; gap: 8px; align-items: center; }
+
+.search-input { min-width: 260px; }
+
+/* Page-scoped: make the 'Per page' select rounder and nudge it down slightly */
+.audit-container .perpage-label select {
+  border-radius: 10px;
+  padding: 6px 8px;
+  border: 1px solid #e6e9ee;
+  background: #fff;
+  transform: translateY(6px);
+}
+
+/* Also nudge the toolbar buttons and per-page label down slightly to align */
+.audit-container .toolbar-right .toolbar-btn,
+.audit-container .toolbar-right .perpage-label {
+  transform: translateY(6px);
+}
+
+.perpage-label, .search-label { font-size: 13px; color: #374151; }
+
+.toolbar-btn {
+  background: #ffffff;
+  border: 1px solid #e6e9ee;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.table-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 6px rgba(16,24,40,0.04);
+  padding: 12px;
+}
+
+.audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.audit-table thead th {
+  background: #f3f4f6;
+  padding: 12px 10px;
+  text-align: left;
+  font-weight: 700;
+  color: #111827;
+  vertical-align: middle;
+}
+
+.audit-row { border-top: 1px solid #eef2f6; }
+.audit-row:hover { background: #fbfdff; }
+
+.cell { padding: 12px 10px; vertical-align: top; }
+
+.id-col { width: 60px; color: #374151; }
+.type-col { width: 140px; color: #374151; }
+.entity-col { width: 220px; color: #111827; }
+.action-col { width: 120px; color: #374151; }
+.actor-col { width: 180px; color: #111827; }
+.details-col { color: #374151; max-width: 520px; }
+.when-col { width: 180px; color: #6b7280; font-size: 13px; }
+
+.detail-summary { font-size: 13px; color: #111827; line-height: 1.4; }
+
+.raw-toggle summary { font-size: 13px; color: #6b7280; cursor: pointer; }
+.raw-pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace; font-size: 12px; color: #111827; background: #fafafa; padding: 8px; border-radius: 6px; }
+
+.link { color: #0b5fff; text-decoration: none; }
+.link:hover { text-decoration: underline; }
+
+.audit-error { color: #9b1c1c; margin: 8px 0; }
+.audit-loading { color: #374151; }
+
+@media (max-width: 800px) {
+  .filter-action { margin-left: 0; }
+  .toolbar-row { flex-direction: column; align-items: stretch; }
+  .toolbar-right { justify-content: flex-start; }
+}

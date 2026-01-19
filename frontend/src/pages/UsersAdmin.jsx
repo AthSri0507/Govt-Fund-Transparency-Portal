@@ -2,8 +2,17 @@ import React, { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import axios from 'axios'
 import { getToken } from '../utils/auth'
+import './AdminUser.css'
 
 export default function UsersAdmin() {
+  // Hide the admin top header when this page is active to avoid duplicate headers
+  useEffect(() => {
+    const hdr = document.querySelector('.admin-header')
+    const origDisplay = hdr ? hdr.style.display : null
+    if (hdr) hdr.style.display = 'none'
+    return () => { if (hdr) hdr.style.display = origDisplay }
+  }, [])
+
   const [users, setUsers] = useState([])
   const [err, setErr] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -67,55 +76,61 @@ export default function UsersAdmin() {
   }
 
   return (
-    <div>
-      <h2>User Management</h2>
-      {err && <div style={{ color: 'red' }}>{err}</div>}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', margin: '8px 0 12px 0' }}>
-        <input placeholder="Search name or email" value={search} onChange={(e)=>setSearch(e.target.value)} style={{ padding: 6, minWidth: 220 }} />
-        <select value={roleFilter} onChange={(e)=>setRoleFilter(e.target.value)}>
-          <option value="">All roles</option>
-          <option>Admin</option>
-          <option>Official</option>
-          <option>Citizen</option>
-        </select>
-        <select value={statusFilter} onChange={(e)=>setStatusFilter(e.target.value)}>
-          <option value="">All statuses</option>
-          <option value="active">Active</option>
-          <option value="disabled">Disabled</option>
-        </select>
-        <button onClick={loadUsers} disabled={loading}>Refresh</button>
+    <div className="admin-user-page">
+      <div className="admin-user-inner">
+        <h2 className="admin-title">User Management</h2>
+        {err && <div className="error-inline">{err}</div>}
+
+        <div className="filters-card">
+          <input className="search-input" placeholder="Search name or email" value={search} onChange={(e)=>setSearch(e.target.value)} />
+          <select className="filter-select" value={roleFilter} onChange={(e)=>setRoleFilter(e.target.value)}>
+            <option value="">All roles</option>
+            <option>Admin</option>
+            <option>Official</option>
+            <option>Citizen</option>
+          </select>
+          <select className="filter-select" value={statusFilter} onChange={(e)=>setStatusFilter(e.target.value)}>
+            <option value="">All statuses</option>
+            <option value="active">Active</option>
+            <option value="disabled">Disabled</option>
+          </select>
+          <button className="refresh-button" onClick={loadUsers} disabled={loading}>Refresh</button>
+        </div>
+
+        {loading ? <div>Loading...</div> : (
+          <div className="table-card">
+            <table className="users-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.filter(u => {
+                  if (roleFilter && String(u.role).toLowerCase() !== String(roleFilter).toLowerCase()) return false;
+                  if (statusFilter) {
+                    const isActive = !!u.is_active;
+                    if (statusFilter === 'active' && !isActive) return false;
+                    if (statusFilter === 'disabled' && isActive) return false;
+                  }
+                  if (search) {
+                    const s = search.toLowerCase();
+                    if (!String(u.name).toLowerCase().includes(s) && !String(u.email).toLowerCase().includes(s)) return false;
+                  }
+                  return true;
+                }).map(u => (
+                  <UserRow key={u.id} user={u} changeRole={changeRole} deactivate={deactivate} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
-      {loading ? <div>Loading...</div> : (
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.filter(u => {
-              if (roleFilter && String(u.role).toLowerCase() !== String(roleFilter).toLowerCase()) return false;
-              if (statusFilter) {
-                const isActive = !!u.is_active;
-                if (statusFilter === 'active' && !isActive) return false;
-                if (statusFilter === 'disabled' && isActive) return false;
-              }
-              if (search) {
-                const s = search.toLowerCase();
-                if (!String(u.name).toLowerCase().includes(s) && !String(u.email).toLowerCase().includes(s)) return false;
-              }
-              return true;
-            }).map(u => (
-              <UserRow key={u.id} user={u} changeRole={changeRole} deactivate={deactivate} />
-            ))}
-          </tbody>
-        </table>
-      )}
     </div>
   )
 }
@@ -125,27 +140,30 @@ function UserRow({ user, changeRole, deactivate }) {
   const [submitting, setSubmitting] = useState(false)
 
   return (
-    <tr style={{ borderTop: '1px solid #eee' }}>
-      <td style={{ padding: 8 }}>{user.id}</td>
-      <td style={{ padding: 8 }}>{user.name}</td>
-      <td style={{ padding: 8 }}>{user.email}</td>
-      <td style={{ padding: 8 }}>{user.role}</td>
-      <td style={{ padding: 8 }}>
-        <span style={{ padding: '4px 8px', borderRadius: 12, color: user.is_active ? '#064e3b' : '#6b7280', background: user.is_active ? '#bbf7d0' : '#f3f4f6', fontSize: 12 }}>{user.is_active ? 'Active' : 'Disabled'}</span>
+    <tr className="user-row">
+      <td className="td-cell">{user.id}</td>
+      <td className="td-cell">{user.name}</td>
+      <td className="td-cell">{user.email}</td>
+      <td className="td-cell">{user.role}</td>
+      <td className="td-cell">
+        <span className={`status-badge ${user.is_active ? 'active' : 'disabled'}`}>{user.is_active ? 'Active' : 'Disabled'}</span>
       </td>
-      <td style={{ padding: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <select defaultValue={user.role} onChange={async (e)=>{ setSubmitting(true); setLocalErr(null); await changeRole(user.id, e.target.value, setLocalErr); setSubmitting(false); }} disabled={submitting}>
+      <td className="td-cell">
+        <div className="actions-cell">
+          <select className="role-select" defaultValue={user.role} onChange={async (e)=>{ setSubmitting(true); setLocalErr(null); await changeRole(user.id, e.target.value, setLocalErr); setSubmitting(false); }} disabled={submitting}>
             <option>Citizen</option>
             <option>Official</option>
             <option>Admin</option>
           </select>
-          <div>
-            <button style={{ marginLeft: 8 }} onClick={async ()=>{ setSubmitting(true); setLocalErr(null); await deactivate(user.id, user.is_active ? false : true, setLocalErr); setSubmitting(false); }} disabled={submitting}>{user.is_active ? 'Deactivate' : 'Activate'}</button>
-            <div style={{ fontSize: 11, color: '#6b7280', marginTop: 6 }}>Disabling prevents login and activity</div>
+          <div className="action-button-wrap">
+            <button className="action-button" onClick={async ()=>{ setSubmitting(true); setLocalErr(null); await deactivate(user.id, user.is_active ? false : true, setLocalErr); setSubmitting(false); }} disabled={submitting}>{user.is_active ? 'Deactivate' : 'Activate'}</button>
+            <button className="info-btn" aria-label="Why disable?" tabIndex={0}>
+              <span className="info-icon" aria-hidden="true">i</span>
+              <span className="info-tooltip" role="tooltip">Disabling prevents login and activity</span>
+            </button>
           </div>
         </div>
-        {localErr && <div style={{ color: 'red' }}>{localErr}</div>}
+        {localErr && <div className="local-error">{localErr}</div>}
       </td>
     </tr>
   )

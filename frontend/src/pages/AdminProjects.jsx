@@ -3,6 +3,7 @@ import axios from 'axios'
 import { getToken } from '../utils/auth'
 import { Link } from 'react-router-dom'
 import ProjectMap from '../components/ProjectMap'
+import './AdminProjects.css'
 
 export default function AdminProjects(){
   const [items, setItems] = useState([])
@@ -80,10 +81,13 @@ export default function AdminProjects(){
   const departments = Array.from(new Set(combined.map(p => p.department || '').filter(Boolean)))
 
   return (
-    <div>
-      <h2>Admin — Project Control</h2>
-      <p style={{ marginTop: 6, marginBottom: 12 }}>Manage projects: control lifecycle, view risk, and take action.</p>
-      <div style={{ marginBottom: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
+    <main className="ap-container">
+      <header className="ap-header">
+        <h1 className="ap-title">Admin — Project Control</h1>
+        <p className="ap-subtitle">Manage and monitor all government registered projects.</p>
+      </header>
+
+      <div className="ap-filters" style={{ marginBottom: 12 }}>
         <label>Status: <select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}><option value=''>All</option><option>Active</option><option>Halted</option><option>Cancelled</option><option>Disabled</option></select></label>
         <label>Department: <select value={deptFilter} onChange={e=>setDeptFilter(e.target.value)}><option value=''>All</option>{departments.map(d => <option key={d}>{d}</option>)}</select></label>
         <label>Budget risk: <select value={riskFilter} onChange={e=>setRiskFilter(e.target.value)}><option value=''>All</option><option value='80'>&gt; 80% used</option><option value='100'>&gt; 100% (overrun)</option></select></label>
@@ -91,58 +95,67 @@ export default function AdminProjects(){
         <button onClick={load}>Refresh</button>
       </div>
 
-      {err && <div style={{ color: 'red' }}>{err}</div>}
-      {loading ? <div>Loading...</div> : (
-        <div style={{ display: 'flex', gap: 12 }}>
-          <div style={{ flex: 1 }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ textAlign: 'left', borderBottom: '2px solid #eee' }}>
-                  <th style={{ padding: 8 }}>ID</th>
-                  <th style={{ padding: 8 }}>Name</th>
-                  <th style={{ padding: 8 }}>Department</th>
-                  <th style={{ padding: 8 }}>Status</th>
-                  <th style={{ padding: 8 }}>Used %</th>
-                  <th style={{ padding: 8 }}>Budget</th>
-                  <th style={{ padding: 8 }}>Last Updated</th>
-                  <th style={{ padding: 8 }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {combined.map(p => ({...p, _pct: calcUsedPercent(p)})).filter(p => {
-                  if (statusFilter && String(p.status || '').toLowerCase() !== String(statusFilter).toLowerCase()) return false
-                  if (deptFilter && String(p.department || '').toLowerCase() !== String(deptFilter).toLowerCase()) return false
-                  if (riskFilter){ if (riskFilter === '80' && p._pct <= 80) return false; if (riskFilter === '100' && p._pct <= 100) return false }
-                  return true
-                }).map(p => (
-                  <tr key={p.id} style={{ borderTop: '1px solid #eee' }}>
-                    <td style={{ padding: 8 }}>{p.id}</td>
-                    <td style={{ padding: 8 }}><Link to={`/projects/${p.id}`}>{p.name}</Link></td>
-                    <td style={{ padding: 8 }}>{p.department}</td>
-                    <td style={{ padding: 8 }}><span style={{ padding: '4px 8px', borderRadius: 8, ...statusStyle(p.status) }}>{p.status}</span>{p._deleted ? <span style={{ marginLeft: 8, fontSize: 12, color:'#9b1c1c' }}>Deleted</span> : null}</td>
-                    <td style={{ padding: 8 }}>{p._pct}%</td>
-                    <td style={{ padding: 8 }}>₹{p.budget_total || 0}</td>
-                    <td style={{ padding: 8 }}>{p.updated_at || p.created_at}</td>
-                    <td style={{ padding: 8 }}>
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        <Link to={`/projects/${p.id}`}>View</Link>
-                        {!p._deleted ? <button onClick={()=>doDisable(p.id)}>Disable</button> : <button onClick={()=>doRestore(p.id)}>Restore</button>}
-                        <button onClick={()=>toggleFlag(p.id, !!p.is_flagged)} style={{ color: p.is_flagged ? '#9b1c1c' : undefined }}>{p.is_flagged ? 'Unflag' : 'Flag'}</button>
-                        <Link to={`/admin/audit-logs?entity_type=project&entity_id=${p.id}&include_related=true`}>Audit</Link>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {err && <div className="ap-error">{err}</div>}
+
+      {loading ? <div className="ap-loading">Loading...</div> : (
+        <div className="ap-content">
+          <div className="ap-list">
+            {combined.map(p => ({ ...p, _pct: calcUsedPercent(p) })).filter(p => {
+              if (statusFilter && String(p.status || '').toLowerCase() !== String(statusFilter).toLowerCase()) return false
+              if (deptFilter && String(p.department || '').toLowerCase() !== String(deptFilter).toLowerCase()) return false
+              if (riskFilter){ const pct = calcUsedPercent(p); if (riskFilter === '80' && pct <= 80) return false; if (riskFilter === '100' && pct <= 100) return false }
+              return true
+            }).map(p => (
+              <article className="ap-card" key={p.id}>
+                <div className="ap-card-top">
+                  <div className="ap-card-title">
+                    <Link to={`/projects/${p.id}`} className="ap-link">{p.name}</Link>
+                    <div className="ap-dept">{p.department}</div>
+                  </div>
+                  <div className="ap-status">
+                    <span className="ap-badge" style={statusStyle(p.status)}>{p.status}</span>
+                    {p._deleted ? <span className="ap-deleted">Deleted</span> : null}
+                  </div>
+                </div>
+
+                <div className="ap-card-mid">
+                  <p className="ap-desc">{p.description || ''}</p>
+                  <div className="ap-budget">Total: ₹{p.budget_total || 0} • Used: ₹{p.budget_used || 0} ({calcUsedPercent(p)}%)</div>
+                </div>
+
+                <div className="ap-card-bottom">
+                  <div className="ap-updated">{p.updated_at || p.created_at}</div>
+                  <div className="ap-actions">
+                    <Link to={`/dashboard/official/projects/${p.id}/view`} className="ap-btn ap-btn-primary">View</Link>
+                    {!p._deleted ? (
+                      <button className="ap-btn ap-btn-danger-outline" onClick={()=>doDisable(p.id)}>Disable</button>
+                    ) : (
+                      <button className="ap-btn ap-btn-secondary" onClick={()=>doRestore(p.id)}>Restore</button>
+                    )}
+                    <button className="ap-btn ap-btn-outline" onClick={()=>toggleFlag(p.id, !!p.is_flagged)}>{p.is_flagged ? 'Unflag' : 'Flag'}</button>
+                    <Link to={`/projects/${p.id}/timeline`} className="ap-link-small">Timeline</Link>
+                  </div>
+                </div>
+              </article>
+            ))}
+
+            {combined.filter(p => {
+              if (statusFilter && String(p.status || '').toLowerCase() !== String(statusFilter).toLowerCase()) return false
+              if (deptFilter && String(p.department || '').toLowerCase() !== String(deptFilter).toLowerCase()) return false
+              if (riskFilter){ const pct = calcUsedPercent(p); if (riskFilter === '80' && pct <= 80) return false; if (riskFilter === '100' && pct <= 100) return false }
+              return true
+            }).length === 0 && (
+              <div className="ap-empty">No registered projects found.</div>
+            )}
           </div>
+
           {showMap ? (
-            <div style={{ width: 500 }}>
+            <aside className="ap-map">
               <ProjectMap projects={combined} />
-            </div>
+            </aside>
           ) : null}
         </div>
       )}
-    </div>
+    </main>
   )
 }

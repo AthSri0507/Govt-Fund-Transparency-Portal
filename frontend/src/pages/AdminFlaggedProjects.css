@@ -1,0 +1,129 @@
+/* Styles for Admin Flagged Projects - clean, structured government review tone */
+.flagged-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  color: #0f172a;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+}
+
+.flagged-header {
+  margin-bottom: 12px;
+}
+
+.flagged-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  color: #0b1a2b;
+}
+
+.flagged-subtitle {
+  margin: 0;
+  color: #475569;
+  font-size: 14px;
+}
+
+.flagged-error {
+  color: #9b1c1c;
+  margin: 8px 0 12px 0;
+}
+
+.flagged-loading {
+  color: #0f172a;
+  padding: 12px 0;
+}
+
+.flagged-list {
+  margin-top: 16px;
+}
+
+.flagged-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 6px rgba(2,6,23,0.06);
+  padding: 18px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flagged-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.flagged-link {
+  color: #0b61d9;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.flagged-link:hover {
+  text-decoration: underline;
+}
+
+.flagged-department {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.flag-badge {
+  background: #fdecea;
+  color: #9b1c1c;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-weight: 600;
+  font-size: 13px;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.flagged-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.action-group {
+  display: flex;
+  align-items: center;
+}
+
+.unflag-button {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0b1a2b;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.unflag-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.flagged-empty {
+  text-align: center;
+  color: #64748b;
+  font-size: 16px;
+  padding: 40px 0;
+}
+
+/* Keep layout conservative and readable on narrow screens */
+@media (max-width: 640px) {
+  .flagged-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .flagged-right .action-placeholder {
+    width: 100%;
+    height: 40px;
+  }
+}

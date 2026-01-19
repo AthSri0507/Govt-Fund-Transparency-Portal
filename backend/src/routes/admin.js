@@ -89,7 +89,7 @@ router.get('/audit-logs', requireAuth, requireRole('admin'), async (req, res) =>
 // GET /admin/funds - list fund transactions with optional joins and filters
 router.get('/funds', requireAuth, requireRole('admin'), async (req, res) => {
   try {
-    let { project_id, official_id, from, to, min_amount, max_amount, limit = 100, offset = 0 } = req.query;
+    let { project_id, official_id, from, to, min_amount, max_amount, project_name, amount, limit = 100, offset = 0 } = req.query;
     const where = ['1=1'];
     const params = [];
     if (project_id) { where.push('ft.project_id = ?'); params.push(Number(project_id)); }
@@ -97,6 +97,13 @@ router.get('/funds', requireAuth, requireRole('admin'), async (req, res) => {
     if (from) { where.push('ft.transaction_date >= ?'); params.push(from); }
     if (to) { where.push('ft.transaction_date <= ?'); params.push(to); }
     if (min_amount) { where.push('ft.amount >= ?'); params.push(Number(min_amount)); }
+    // Support frontend `amount` param as a minimum amount (legacy `min_amount` still supported)
+    if (amount) {
+      const n = Number(amount);
+      if (!Number.isNaN(n)) { where.push('ft.amount >= ?'); params.push(n); }
+    }
+    // Allow filtering by project name (partial match)
+    if (project_name) { where.push('p.name LIKE ?'); params.push(`%${String(project_name)}%`); }
     if (max_amount) { where.push('ft.amount <= ?'); params.push(Number(max_amount)); }
     const whereSql = `WHERE ${where.join(' AND ')}`;
     limit = Number(limit) || 100;

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { getToken } from '../utils/auth'
 import { Link } from 'react-router-dom'
+import './AdminDeletedProject.css'
 
 export default function AdminDeletedProjects(){
   const [items, setItems] = useState([])
@@ -30,29 +31,46 @@ export default function AdminDeletedProjects(){
   }
 
   return (
-    <div>
-      <h2>Deleted Projects (Admin)</h2>
-      <p style={{ marginTop: 6, marginBottom: 12 }}>Projects that were soft-deleted. You can restore them to visibility.</p>
-      {err && <div style={{ color: 'red' }}>{err}</div>}
-      {loading ? <div>Loading...</div> : (
-        <div>
-          {items.length === 0 ? <div>No deleted projects.</div> : items.map(p => (
-            <div key={p.id} style={{ border: '1px solid #ddd', padding: 12, marginBottom: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <div>
-                  <h4 style={{ margin: 0 }}>{p.name} <span style={{ fontSize: 12, color: '#9b1c1c', background: '#ffe6e6', padding: '2px 6px', borderRadius: 8 }}>Deleted</span></h4>
-                  <div style={{ fontSize: 13 }}>{p.description}</div>
+    <main className="admin-deleted-container">
+      <header className="admin-page-header">
+        <h1 className="admin-title">Deleted Projects (Admin)</h1>
+        <p className="admin-subtitle">Soft-deleted projects that can be restored by administrators.</p>
+      </header>
+
+      {err && <div className="admin-error">{err}</div>}
+
+      {loading ? (
+        <div className="admin-loading">Loading...</div>
+      ) : (
+        <section>
+          {items.length === 0 ? (
+            <div className="no-items">No deleted projects.</div>
+          ) : (
+            items.map(p => (
+              <article key={p.id} className="deleted-card">
+                <div className="card-left">
+                  <div className="card-header">
+                    <h3 className="project-name">{p.name}</h3>
+                    <span className="deleted-badge">Deleted</span>
+                  </div>
+                  {p.description && <div className="project-desc">{p.description}</div>}
+
+                  <div className="budget-row">
+                    <div className="budget-item"><span className="label">Budget Total:</span> <span className="value">₹{p.budget_total}</span></div>
+                    <div className="budget-item"><span className="label">Amount Used:</span> <span className="value">₹{p.budget_used}</span></div>
+                  </div>
+
+                  <div className="open-link-row"><Link className="open-link" to={`/dashboard/official/projects/${p.id}/view`}>Open (admin)</Link></div>
                 </div>
-                <div>
-                  <button onClick={()=>restore(p.id)}>Restore</button>
+
+                <div className="card-right">
+                  <button className="restore-btn" onClick={()=>restore(p.id)}>Restore</button>
                 </div>
-              </div>
-              <div style={{ marginTop: 8 }}>Budget total: {p.budget_total} · Used: {p.budget_used}</div>
-              <div style={{ marginTop: 8 }}><Link to={`/projects/${p.id}`}>Open (admin)</Link></div>
-            </div>
-          ))}
-        </div>
+              </article>
+            ))
+          )}
+        </section>
       )}
-    </div>
+    </main>
   )
 }

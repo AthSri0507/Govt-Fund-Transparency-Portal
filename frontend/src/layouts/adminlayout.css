@@ -1,0 +1,67 @@
+.admin-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 18px;
+  background:#fff;
+  box-shadow:0 2px 6px rgba(3,18,32,0.04);
+  border-bottom:2px solid rgba(11,60,93,0.06);
+  position:relative;
+}
+
+.admin-header:after{content:'';display:block;height:2px;background:linear-gradient(90deg,#FF9933,#ffffff,#138808);opacity:0.95;margin-top:8px}
+
+.admin-header .header-brand{display:flex;align-items:center;gap:18px;text-decoration:none;color:inherit}
+.admin-header .header-logo{width:56px;height:56px;object-fit:contain;border-radius:8px}
+.admin-header .title-wrapper{display:flex;flex-direction:column}
+.admin-header .portal-title{font-weight:800;font-size:18px;color:#0b3c5d;line-height:1}
+.admin-header .portal-sub{font-size:12px;color:#6b7b86;opacity:0.9;margin-top:2px}
+
+:root{--gov-blue:#0b3c5d;--gov-muted:#6b7b86;--panel-bg:#fafafa}
+
+.admin-header .admin-header-utilities{display:flex;gap:12px;align-items:center;margin-left:auto}
+
+.admin-header .user-block{display:flex;align-items:center;gap:12px;background:#fff;padding:8px 12px;border-radius:12px;box-shadow:0 6px 18px rgba(3,18,32,0.06)}
+.admin-header .user-avatar{width:36px;height:36px;background:#0b3c5d;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px}
+.admin-header .user-info{display:flex;flex-direction:column;line-height:1.05;margin-right:8px}
+.admin-header .user-name{font-weight:600;color:#0b3c5d;font-size:14px}
+.admin-header .user-role{font-size:12px;color:#55696d}
+.admin-header .user-menu{border:none;background:#f4f7fb;border-radius:8px;padding:6px 8px;font-size:13px;cursor:pointer}
+
+.admin-header .user-menu, .admin-header button{box-sizing:border-box}
+.admin-header button{padding:8px 10px;border-radius:8px;border:0;cursor:pointer}
+
+/* Sidebar styles */
+.admin-sidebar{
+  width:220px;
+  border-right:1px solid rgba(16,40,59,0.06);
+  background:var(--panel-bg);
+  padding:12px 8px;
+  box-sizing:border-box;
+}
+
+.admin-sidebar nav{display:flex;flex-direction:column}
+.admin-sidebar .nav-item{
+  display:block;
+  padding:8px 10px;
+  color:var(--gov-blue);
+  text-decoration:none;
+  font-weight:600;
+  border-left:4px solid transparent;
+  border-radius:4px;
+  margin-bottom:10px;
+  text-align:left;
+}
+.admin-sidebar .nav-item:hover{background:rgba(11,60,93,0.02)}
+.admin-sidebar .nav-item.active{
+  border-left-color:var(--gov-blue);
+  background:rgba(11,60,93,0.04);
+  padding-left:10px;
+}
+
+/* Main content container alignment */
+.admin-content{flex:1;padding:0}
+.admin-main-container{max-width:1200px;margin:0 auto;padding:0}
+
+/* Footer stays full width but padding matches main content */
+.admin-footer{padding:18px;border-top:1px solid #eee;text-align:center;font-size:16px;color:#666}

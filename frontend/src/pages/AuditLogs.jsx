@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { getToken } from '../utils/auth'
+import './AuditLogs.css'
 
 export default function AuditLogs() {
   const [logs, setLogs] = useState([])
@@ -132,53 +133,86 @@ export default function AuditLogs() {
   const [offset, setOffset] = useState(0)
 
   return (
-    <div>
-      <h2>Audit Logs</h2>
-      <div style={{ marginBottom: 8 }}>
-        <label style={{ marginRight: 8 }}>Entity Type: <input value={filters.entity_type} onChange={(e)=>setFilters(f=>({...f, entity_type: e.target.value}))} /></label>
-        <label style={{ marginRight: 8 }}>Entity ID: <input value={filters.entity_id} onChange={(e)=>setFilters(f=>({...f, entity_id: e.target.value}))} /></label>
-        <label style={{ marginRight: 8 }}>Actor ID: <input value={filters.actor_id} onChange={(e)=>setFilters(f=>({...f, actor_id: e.target.value}))} /></label>
-        <label style={{ marginLeft: 8 }}>
-          <input type="checkbox" checked={includeRelated} onChange={e=>setIncludeRelated(Boolean(e.target.checked))} /> Include related activity
-        </label>
-        <button onClick={()=>{ const p = {}; if (filters.entity_type) p.entity_type = filters.entity_type; if (filters.entity_id) { if (includeRelated && filters.entity_type === 'project') p.project_id = filters.entity_id; else p.entity_id = filters.entity_id } if (filters.actor_id) p.actor_id = filters.actor_id; if (!includeRelated) p.include_related = 'false'; load(p) }}>Filter</button>
+    <main className="audit-container">
+      <header className="audit-header">
+        <h1 className="audit-title">Audit Logs</h1>
+      </header>
+
+      <section className="filters-card">
+        <div className="audit-filters-grid">
+          <div className="filters-row filters-row-1">
+            <label className="filter-item">Entity Type
+              <input value={filters.entity_type} onChange={(e)=>setFilters(f=>({...f, entity_type: e.target.value}))} />
+            </label>
+            <label className="filter-item">Entity ID
+              <input value={filters.entity_id} onChange={(e)=>setFilters(f=>({...f, entity_id: e.target.value}))} />
+            </label>
+            <label className="filter-item">Actor ID
+              <input value={filters.actor_id} onChange={(e)=>setFilters(f=>({...f, actor_id: e.target.value}))} />
+            </label>
+          </div>
+
+          <div className="filters-row filters-row-2">
+            <div className="quick-filter-bar">
+              <button onClick={()=>{ setFilters(f=>({...f, entity_type: 'fund_transaction'})); load({ entity_type: 'fund_transaction' }) }}>Only fund transactions</button>
+              <button onClick={()=>{ setFilters(f=>({...f, entity_type: 'project'})); load({ entity_type: 'project' }) }}>Only project actions</button>
+              <button onClick={()=>{ setFilters(f=>({...f, entity_type: 'user'})); load({ entity_type: 'user' }) }}>Only user actions</button>
+            </div>
+          </div>
+
+          <div className="filters-row filters-row-3">
+            <div className="filters-left">
+              <label className="filter-item checkbox-item inline-checkbox">
+                <input type="checkbox" checked={includeRelated} onChange={e=>setIncludeRelated(Boolean(e.target.checked))} /> <span className="checkbox-text">Include related activity</span>
+              </label>
+
+              <div className="filters-actions">
+                <button onClick={()=>{ const p = {}; if (filters.entity_type) p.entity_type = filters.entity_type; if (filters.entity_id) { if (includeRelated && filters.entity_type === 'project') p.project_id = filters.entity_id; else p.entity_id = filters.entity_id } if (filters.actor_id) p.actor_id = filters.actor_id; if (!includeRelated) p.include_related = 'false'; load(p) }}>Filter</button>
+                <button onClick={()=>{ setFilters({ entity_type: '', actor_id: '' }); load({}); }}>Clear filters</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {err && <div className="audit-error">{err}</div>}
+
+      <div className="toolbar-row">
+        <div className="toolbar-left">
+          <label className="search-label">Search: <input className="search-input" onChange={(e)=>{ const q=e.target.value.toLowerCase(); setLogs(l=> l.filter(x=> (String(x.entity_name||'').toLowerCase().includes(q) || String(x.actor_name||'').toLowerCase().includes(q) || String(x.action||'').toLowerCase().includes(q)))) }} /></label>
+        </div>
+        <div className="toolbar-right">
+          <label className="perpage-label">Per page: <select value={limit} onChange={(e)=>{ setLimit(Number(e.target.value)); setOffset(0); load({ limit: Number(e.target.value), offset: 0 }) }}><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option></select></label>
+          <button onClick={()=>{ const no = Math.max(0, offset - limit); setOffset(no); load({ limit, offset: no }) }} className="toolbar-btn">Prev</button>
+          <button onClick={()=>{ const no = offset + limit; setOffset(no); load({ limit, offset: no }) }} className="toolbar-btn">Next</button>
+        </div>
       </div>
-      <div style={{ marginBottom: 8, display: 'flex', gap: 8 }}>
-        <button onClick={()=>{ setFilters(f=>({...f, entity_type: 'fund_transaction'})); load({ entity_type: 'fund_transaction' }) }}>Only fund transactions</button>
-        <button onClick={()=>{ setFilters(f=>({...f, entity_type: 'project'})); load({ entity_type: 'project' }) }}>Only project actions</button>
-        <button onClick={()=>{ setFilters(f=>({...f, entity_type: 'user'})); load({ entity_type: 'user' }) }}>Only user actions</button>
-        <button onClick={()=>{ setFilters({ entity_type: '', actor_id: '' }); load({}); }}>Clear filters</button>
-      </div>
-      {err && <div style={{ color: 'red' }}>{err}</div>}
-      <div style={{ marginBottom: 8 }}>
-        <label style={{ marginRight: 8 }}>Search: <input onChange={(e)=>{ const q=e.target.value.toLowerCase(); setLogs(l=> l.filter(x=> (String(x.entity_name||'').toLowerCase().includes(q) || String(x.actor_name||'').toLowerCase().includes(q) || String(x.action||'').toLowerCase().includes(q)))) }} /></label>
-        <label style={{ marginLeft: 12 }}>Per page: <select value={limit} onChange={(e)=>{ setLimit(Number(e.target.value)); setOffset(0); load({ limit: Number(e.target.value), offset: 0 }) }}><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option></select></label>
-        <button style={{ marginLeft: 12 }} onClick={()=>{ const no = Math.max(0, offset - limit); setOffset(no); load({ limit, offset: no }) }}>Prev</button>
-        <button style={{ marginLeft: 6 }} onClick={()=>{ const no = offset + limit; setOffset(no); load({ limit, offset: no }) }}>Next</button>
-      </div>
-      {loading ? <div>Loading...</div> : (
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr><th>ID</th><th>Entity</th><th>Entity</th><th>Action</th><th>Actor</th><th>Details</th><th>When</th></tr>
-          </thead>
-          <tbody>
-            {logs.map(l => (
-              <tr key={l.id} style={{ borderTop: '1px solid #eee' }}>
-                <td style={{ padding: 8, verticalAlign: 'top' }}>{l.id}</td>
-                <td style={{ padding: 8, verticalAlign: 'top' }}>{l.entity_type}</td>
-                <td style={{ padding: 8, verticalAlign: 'top' }}>{l.entity_name || l.entity_id}{String(l.entity_type).toLowerCase() === 'project' && l.entity_id ? (<span> <a href={`/projects/${l.entity_id}`}>(open)</a></span>) : null}</td>
-                <td style={{ padding: 8, verticalAlign: 'top' }}>{l.action}</td>
-                <td style={{ padding: 8, verticalAlign: 'top' }}>{l.actor_name || l.actor_id} {l.actor_id ? <a href={`/admin/audit-logs?actor_id=${l.actor_id}`}>(actions)</a> : null}</td>
-                <td style={{ padding: 8, maxWidth: 400 }}>
-                  <div style={{ fontSize: 13, color: '#111' }}>{renderSummary(l)}</div>
-                  <details style={{ marginTop: 6 }}><summary>Raw</summary><pre style={{ whiteSpace: 'pre-wrap', maxHeight: 200, overflow: 'auto' }}>{JSON.stringify(l, null, 2)}</pre></details>
-                </td>
-                <td style={{ padding: 8, verticalAlign: 'top' }}>{l.created_at}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+      {loading ? <div className="audit-loading">Loading...</div> : (
+        <div className="table-card">
+          <table className="audit-table">
+            <thead>
+              <tr><th>ID</th><th>Entity</th><th>Entity</th><th>Action</th><th>Actor</th><th>Details</th><th>When</th></tr>
+            </thead>
+            <tbody>
+              {logs.map(l => (
+                <tr key={l.id} className="audit-row">
+                  <td className="cell id-col">{l.id}</td>
+                  <td className="cell type-col">{l.entity_type}</td>
+                  <td className="cell entity-col">{l.entity_name || l.entity_id}{String(l.entity_type).toLowerCase() === 'project' && l.entity_id ? (<span> <a className="link" href={`/dashboard/official/projects/${l.entity_id}/view`}>(open)</a></span>) : null}</td>
+                  <td className="cell action-col">{l.action}</td>
+                  <td className="cell actor-col">{l.actor_name || l.actor_id} {l.actor_id ? <a className="link" href={`/admin/audit-logs?actor_id=${l.actor_id}`}>(actions)</a> : null}</td>
+                  <td className="cell details-col">
+                    <div className="detail-summary">{renderSummary(l)}</div>
+                    <details className="raw-toggle"><summary>Raw</summary><pre className="raw-pre">{JSON.stringify(l, null, 2)}</pre></details>
+                  </td>
+                  <td className="cell when-col">{l.created_at}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
-    </div>
+    </main>
   )
 }

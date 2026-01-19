@@ -1,0 +1,44 @@
+.admin-user-page{background:transparent}
+.admin-user-inner{max-width:1200px;margin:0 auto;padding:24px;box-sizing:border-box}
+
+.admin-title{font-size:22px;font-weight:800;margin:0 0 12px 0;color:var(--gov-blue, #0b3c5d)}
+.error-inline{color:#8a1f2d;margin-bottom:8px}
+
+.admin-user-page .filters-card{display:grid;grid-template-columns:1fr 160px 160px auto;gap:12px;align-items:center;background:#fff;border:1px solid #e8eef2;padding:16px;border-radius:8px;margin-bottom:16px}
+.admin-user-page .search-input{width:100%;min-width:260px;padding:10px 12px;border:1px solid #d6dde6;border-radius:6px}
+.admin-user-page .filter-select{width:150px;padding:8px 10px;border:1px solid #d6dde6;border-radius:6px;background:#fff}
+.admin-user-page .refresh-button{padding:8px 12px;border-radius:6px;border:1px solid #cfd8df;background:#f8fafc;cursor:pointer;transform:translateY(-4px)}
+.refresh-button:disabled{opacity:0.6;cursor:not-allowed}
+
+.table-card{background:#fff;border-radius:8px;box-shadow:0 6px 18px rgba(11,60,93,0.04);padding:0}
+.users-table{width:100%;border-collapse:collapse}
+.users-table thead th{background:#f6f8fb;text-align:left;padding:14px 18px;font-weight:700;color:#203542;border-bottom:1px solid #edf2f5;text-transform:capitalize}
+.users-table tbody .user-row{border-top:1px solid #f0f3f6}
+.users-table td{padding:16px 18px;vertical-align:middle}
+.users-table tbody tr.user-row:hover{background:#fbfdff}
+
+.status-badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:13px}
+.status-badge.active{background:#ddf7e8;color:#06623a}
+.status-badge.disabled{background:#f3f4f6;color:#6b7280}
+
+.actions-cell{display:flex;align-items:center;gap:10px;white-space:nowrap}
+.role-select{padding:8px 10px;border-radius:6px;border:1px solid #d6dde6;background:#fff;height:36px;line-height:18px}
+.role-select{transform:translateY(5px)}
+.action-button{padding:8px 10px;border-radius:6px;border:1px solid #c7ced4;background:#fff;cursor:pointer;height:36px;line-height:18px}
+.action-button:disabled{opacity:0.6}
+.action-button-wrap{display:flex;flex-direction:row;align-items:center;gap:8px}
+.action-help{font-size:11px;color:#6b7280;margin-top:6px}
+.local-error{color:#b91c1c;margin-top:8px}
+
+/* Info button + tooltip */
+.info-btn{background:transparent;border:none;padding:0 6px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;position:relative;height:36px}
+.info-btn:focus{outline:none}
+.info-icon{width:16px;height:16px;border-radius:50%;border:1px solid #d3dde4;display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:var(--gov-blue,#0b3c5d);font-size:11px;background:#fff}
+.info-tooltip{position:absolute;left:50%;transform:translateX(-50%);top:calc(100% + 8px);white-space:nowrap;background:#fff;border:1px solid #e8eef2;padding:8px 10px;border-radius:6px;box-shadow:0 8px 24px rgba(11,60,93,0.08);font-size:13px;color:#203542;opacity:0;pointer-events:none;transition:opacity 120ms ease;z-index:30}
+.info-btn:hover .info-tooltip,.info-btn:focus .info-tooltip{opacity:1;pointer-events:auto}
+
+@media (max-width:900px){
+	.admin-user-page .filters-card{grid-template-columns:1fr 120px 120px auto;overflow-x:auto}
+	.admin-user-page .filter-select{width:100%}
+	.admin-user-page .search-input{min-width:180px}
+}

@@ -65,7 +65,7 @@ export default function App() {
           <Route path="/dashboard/official" element={<Protected allowedRoles={["Official"]}><OfficialHome /></Protected>} />
           <Route path="/dashboard/official/create" element={<Protected allowedRoles={["Official"]}><CreateProject /></Protected>} />
           <Route path="/dashboard/official/projects/:id/edit" element={<Protected allowedRoles={["Official"]}><EditProject /></Protected>} />
-          <Route path="/dashboard/official/projects/:id/view" element={<Protected allowedRoles={["Official"]}><OfficialProjectView /></Protected>} />
+          <Route path="/dashboard/official/projects/:id/view" element={<Protected allowedRoles={["Official","Admin"]}><OfficialProjectView /></Protected>} />
           <Route path="/dashboard/official/projects" element={<Protected allowedRoles={["Official"]}><ManageProjects /></Protected>} />
           <Route path="/dashboard/admin" element={<Protected allowedRoles={["Admin"]}><AdminLayout><DashboardAdmin /></AdminLayout></Protected>} />
           <Route path="/dashboard/admin/projects" element={<Protected allowedRoles={["Admin"]}><AdminLayout><AdminProjects /></AdminLayout></Protected>} />
