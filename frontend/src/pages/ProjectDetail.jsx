@@ -98,6 +98,135 @@ function toTitleCase(str){
   return str.split(' ').map(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()).join(' ')
 }
 
+/**
+ * Generate a natural language summary of citizen sentiment.
+ * Uses existing processed sentiment data (counts, topTokens) without displaying any numbers.
+ * Returns a human-readable, professional 1-2 sentence summary suitable for government dashboards.
+ * Distinguishes between confusion/continuity feedback and quality/satisfaction feedback.
+ */
+function generateSentimentSummary(summary) {
+  if (!summary || !summary.count || summary.count === 0) {
+    return 'No citizen feedback has been processed yet.'
+  }
+
+  const counts = summary.counts || { positive: 0, neutral: 0, negative: 0 }
+  const total = counts.positive + counts.neutral + counts.negative
+  if (total === 0) {
+    return 'Citizen feedback is currently being processed.'
+  }
+
+  const topTokens = (summary.topTokens || []).map(t => t.toLowerCase())
+  const topPhrases = (summary.topPhrases || []).map(p => (typeof p === 'string' ? p : p.phrase || '').toLowerCase())
+  const allText = [...topTokens, ...topPhrases].join(' ')
+
+  // Confusion / continuity keywords - about progress, status, delays
+  const confusionKeywords = ['why', 'stop', 'stopped', 'happened', 'delay', 'status', 'what happened', 'progress', 'continuity', 'unclear', 'confus', 'waiting', 'stalled', 'halted']
+  // Quality / satisfaction keywords - about how good/bad the work is
+  const qualityKeywords = ['ok', 'okay', 'decent', 'average', 'not great', 'could be better', 'bad', 'good', 'like', 'nice', 'quality', 'work', 'acceptable', 'mediocre', 'satisfactory', 'poor', 'excellent', 'great', 'fine', 'alright']
+
+  // Count keyword matches
+  let confusionScore = 0
+  let qualityScore = 0
+  
+  for (const kw of confusionKeywords) {
+    if (allText.includes(kw)) confusionScore++
+    if (topTokens.some(t => t.includes(kw))) confusionScore++
+  }
+  for (const kw of qualityKeywords) {
+    if (allText.includes(kw)) qualityScore++
+    if (topTokens.some(t => t.includes(kw))) qualityScore++
+  }
+
+  const isConfusionFocused = confusionScore > qualityScore
+  const isQualityFocused = qualityScore > confusionScore
+  const isMixedFocus = confusionScore > 0 && qualityScore > 0 && Math.abs(confusionScore - qualityScore) <= 1
+
+  // Determine sentiment category
+  const posCount = counts.positive
+  const negCount = counts.negative
+  const neutCount = counts.neutral
+
+  const hasBothPosAndNeg = posCount > 0 && negCount > 0
+  const stronglyNegative = negCount > posCount && negCount > neutCount
+  const stronglyPositive = posCount > negCount && posCount > neutCount
+  const mostlyNeutral = neutCount >= posCount && neutCount >= negCount && posCount === 0 && negCount === 0
+  const limitedEngagement = total <= 3
+
+  // Build the summary based on rules
+  let result = ''
+
+  if (limitedEngagement && mostlyNeutral) {
+    // Neutral / limited engagement
+    result = 'Citizen feedback is limited and largely neutral, with no strong positive or negative trend observed.'
+  } else if (hasBothPosAndNeg && !stronglyNegative && !stronglyPositive) {
+    // Mixed reactions - determine if quality-focused or confusion-focused
+    if (isQualityFocused) {
+      // Case A: Quality-focused mixed
+      result = 'Citizens show mixed reactions, with many describing the project as acceptable while noting that improvements are needed. Some positive feedback exists, but several comments suggest the quality could be better.'
+    } else if (isConfusionFocused) {
+      // Case B: Confusion-focused mixed
+      result = 'Citizens show mixed reactions, but many express concern and confusion about recent project developments and question its progress.'
+    } else if (isMixedFocus) {
+      result = 'Citizens show mixed reactions, with some questioning project progress while others comment on the quality of work delivered.'
+    } else {
+      result = 'Citizens show mixed reactions regarding the project, with varied opinions expressed across the feedback received.'
+    }
+  } else if (stronglyNegative) {
+    // Mostly/strongly negative
+    if (isQualityFocused) {
+      // Case D: Quality-focused negative
+      result = 'Public feedback reflects dissatisfaction, with many citizens feeling the project does not meet expectations.'
+    } else if (isConfusionFocused) {
+      result = 'Public feedback reflects widespread concern, with many citizens seeking clarification about delays and project status.'
+    } else {
+      result = 'Public feedback reflects significant dissatisfaction, with many citizens expressing concern about the project\'s current state.'
+    }
+  } else if (stronglyPositive) {
+    // Case C: Mostly positive
+    if (negCount > 0) {
+      result = 'Citizens are largely satisfied with the project and appreciate its quality, though a few minor concerns remain.'
+    } else {
+      result = 'Citizens express strong approval of the project, with most comments reflecting satisfaction with the quality and progress.'
+    }
+  } else if (mostlyNeutral) {
+    // Mostly neutral feedback
+    if (isQualityFocused) {
+      result = 'Citizen feedback is generally neutral, with most describing the project as acceptable without strong praise or criticism.'
+    } else {
+      result = 'Citizen feedback is largely neutral, with no strong positive or negative sentiment observed at this time.'
+    }
+  } else {
+    // Default fallback for edge cases
+    if (isQualityFocused && negCount > 0) {
+      result = 'Citizens have shared feedback on project quality, with room for improvement noted in several comments.'
+    } else if (isConfusionFocused) {
+      result = 'A number of citizens express concern or seek clarification regarding recent project developments.'
+    } else {
+      result = 'Citizen feedback has been received and reflects a range of perspectives on the project.'
+    }
+  }
+
+  return result
+}
+
+// Render a compact sentiment badge (Positive / Neutral / Negative)
+function renderSentimentBadge(summary) {
+  if (!summary || !summary.count) return null
+  const counts = summary.counts || { positive: 0, neutral: 0, negative: 0 }
+  let label = 'Neutral'
+  if (counts.positive > counts.negative) label = 'Positive'
+  else if (counts.negative > counts.positive) label = 'Negative'
+
+  const color = label === 'Positive' ? '#2e7d32' : label === 'Negative' ? '#d32f2f' : '#616161'
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+      <span style={{ background: color, color: '#fff', padding: '4px 8px', borderRadius: 12, fontSize: 12, fontWeight: 600 }}>
+        {label}
+      </span>
+    </div>
+  )
+}
+
 export default function ProjectDetail({ initialOpenTimeline = false, forceCitizenView = false }) {
   const { id } = useParams()
   const [project, setProject] = useState(null)
@@ -188,17 +317,16 @@ export default function ProjectDetail({ initialOpenTimeline = false, forceCitize
                   </div>
 
                   <div className="header-row-actions" style={{ marginTop: 8, display: 'flex', gap: 12, alignItems: 'center' }}>
-                        <div className={`status-badge ${project.status ? project.status.toLowerCase() : ''}`}>{project.status || 'Unknown'}</div>
-                    <div className="rating-block" style={{ marginLeft: 12 }}>
+                    <div className={`status-badge ${project.status ? project.status.toLowerCase() : ''}`}>{project.status || 'Unknown'}</div>
+                    <div className="rating-block">
                       {project.avg_rating !== null && project.avg_rating !== undefined ? (
-                        <>
-                          <div className="stars" title={`${Number(project.avg_rating).toFixed(1)} avg`}>{renderStars(Math.round(project.avg_rating))}</div>
-                        </>
+                        <div className="stars" title={`${Number(project.avg_rating).toFixed(1)} avg`}>{renderStars(Math.round(project.avg_rating))}</div>
                       ) : (
                         <div className="no-rating">No ratings yet</div>
                       )}
                     </div>
-                    <div className="follow-wrapper" style={{ marginLeft: 12 }}><FollowButton projectId={project.id} /></div>
+                    {summary && renderSentimentBadge(summary)}
+                    <div className="follow-wrapper" style={{ marginLeft: 'auto' }}><FollowButton projectId={project.id} /></div>
                   </div>
 
                   <div className="header-row2" style={{ marginTop: 12, display: 'flex', gap: 20 }}>
@@ -354,11 +482,13 @@ export default function ProjectDetail({ initialOpenTimeline = false, forceCitize
               <div className="card comments-card">
                 <div className="comments-header"><h3>What citizens say</h3></div>
                 <div className="sentiment-block">
-                  {(summary && summary.count > 0) && (
-                    <div>
-                      <div className="summary-text"><strong>{summary.summary_text}</strong></div>
-                      {summary.top_keywords && <div className="muted">Top keywords: {summary.top_keywords.map(k=>k.word||k).slice(0,10).join(', ')}</div>}
-                      {summary.top_phrases && <div className="muted">Top phrases: {summary.top_phrases.map(p=>p.phrase||p).slice(0,10).join(', ')}</div>}
+                  {(summary && summary.count > 0) ? (
+                    <div className="sentiment-summary-natural">
+                      <p style={{ margin: 0, lineHeight: 1.6, color: '#333' }}>{generateSentimentSummary(summary)}</p>
+                    </div>
+                  ) : (
+                    <div className="sentiment-summary-natural">
+                      <p style={{ margin: 0, lineHeight: 1.6, color: '#666', fontStyle: 'italic' }}>No citizen feedback has been processed yet.</p>
                     </div>
                   )}
                 </div>
@@ -411,22 +541,9 @@ export default function ProjectDetail({ initialOpenTimeline = false, forceCitize
                   ) : (
                     <div style={{ fontSize: 12, color: '#666' }}>No ratings yet</div>
                   )}
-                  <div style={{ marginLeft: 10 }}>
+                  <div style={{ marginLeft: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
                     {summary && summary.count ? (
-                      (() => {
-                        const avg = typeof summary.average === 'number' ? summary.average : null
-                        let label = 'Neutral'
-                        if (avg !== null) {
-                          if (avg > 0) { label = 'Positive' }
-                          else if (avg < 0) { label = 'Negative' }
-                          else { label = 'Neutral' }
-                        }
-                        return (
-                          <div style={{ fontSize: 13, color: '#444', display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <div style={{ fontWeight: 600 }}>{label} sentiment</div>
-                          </div>
-                        )
-                      })()
+                      renderSentimentBadge(summary)
                     ) : (
                       <div style={{ fontSize: 12, color: '#666', marginLeft: 6 }}>Waiting for processing</div>
                     )}
@@ -580,15 +697,13 @@ export default function ProjectDetail({ initialOpenTimeline = false, forceCitize
               </div>
 
               <section style={{ marginTop: 16 }}>
-                <h3>Sentiment</h3>
-                {summary ? (
-                  <div>
-                    <div><strong>{summary.summary_text}</strong></div>
-                    {summary.top_keywords && <div>Top keywords: {summary.top_keywords.map(k=>k.word||k).slice(0,10).join(', ')}</div>}
-                    {summary.top_phrases && <div>Top phrases: {summary.top_phrases.map(p=>p.phrase||p).slice(0,10).join(', ')}</div>}
+                <h3>Citizen Sentiment Overview</h3>
+                {summary && summary.count > 0 ? (
+                  <div style={{ background: '#f8f9fa', padding: 12, borderRadius: 6, borderLeft: '4px solid #1976d2' }}>
+                    <p style={{ margin: 0, lineHeight: 1.7, color: '#333' }}>{generateSentimentSummary(summary)}</p>
                   </div>
                 ) : (
-                  <div>No sentiment summary available yet.</div>
+                  <div style={{ color: '#666', fontStyle: 'italic' }}>No citizen feedback has been processed yet.</div>
                 )}
               </section>
 

@@ -11,6 +11,19 @@ export function clearToken() {
   localStorage.removeItem('accessToken');
 }
 
+export function getRefreshToken() {
+  return localStorage.getItem('refreshToken');
+}
+
+export function setRefreshToken(token) {
+  if (!token) return;
+  localStorage.setItem('refreshToken', token);
+}
+
+export function clearRefreshToken() {
+  localStorage.removeItem('refreshToken');
+}
+
 export function setUser(user) {
   if (!user) return;
   localStorage.setItem('user', JSON.stringify(user));
@@ -40,5 +53,6 @@ export function removeUserScopedItem(base) {
 
 export function clearAll() {
   clearToken();
+  clearRefreshToken();
   localStorage.removeItem('user');
 }

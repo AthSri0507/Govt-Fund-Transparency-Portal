@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import axios from 'axios'
 import { Link, useNavigate } from 'react-router-dom'
-import { setToken, setUser } from '../utils/auth'
+import { setToken, setUser, setRefreshToken } from '../utils/auth'
 import './login.css'
 
 export default function Login() {
@@ -19,8 +19,10 @@ export default function Login() {
       const res = await axios.post('/api/auth/login', { email, password })
       const token = res.data && res.data.accessToken
       const user = res.data && res.data.user
+      const refresh = res.data && res.data.refreshToken
       if (token) {
         setToken(token)
+        if (refresh) setRefreshToken(refresh)
         setUser(user)
         const role = (user && user.role) || 'Citizen'
         if (role.toLowerCase() === 'official') navigate('/dashboard/official')
