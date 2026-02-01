@@ -17,6 +17,30 @@ export default function Login() {
     setLoading(true)
     try {
       const res = await axios.post('/api/auth/login', { email, password })
+      
+      // Check if biometric enrollment is required (officials/admins first login)
+      if (res.data.requiresBiometricEnrollment) {
+        navigate('/biometric-enroll', { 
+          state: { 
+            user: res.data.user, 
+            tempToken: res.data.tempToken 
+          } 
+        })
+        return
+      }
+      
+      // Check if biometric verification is required (officials/admins subsequent logins)
+      if (res.data.requiresBiometricVerification) {
+        navigate('/biometric-verify', { 
+          state: { 
+            user: res.data.user, 
+            tempToken: res.data.tempToken 
+          } 
+        })
+        return
+      }
+      
+      // Normal login flow (citizens or after biometric)
       const token = res.data && res.data.accessToken
       const user = res.data && res.data.user
       const refresh = res.data && res.data.refreshToken

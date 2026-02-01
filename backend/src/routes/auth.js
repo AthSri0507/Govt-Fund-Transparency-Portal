@@ -5,6 +5,8 @@ const db = require('../db_mysql');
 const { validateBody, Joi } = require('../middleware/validate');
 const loginLimiter = require('../security/loginLimiter');
 const tokenService = require('../services/tokenService');
+const biometricService = require('../services/biometricService');
+const { generateTempToken } = require('./biometric');
 const { jwt: jwtCfg } = require('../config');
 
 const router = express.Router();
@@ -36,7 +38,7 @@ router.post('/login', validateBody(loginSchema), async (req, res) => {
       return res.status(429).json({ message: 'Too many failed attempts. Try again later.', retry_after_ms: waitMs });
     }
 
-    const rows = await db.query('SELECT id, name, email, password_hash, role, is_active FROM users WHERE email = ?', [email]);
+    const rows = await db.query('SELECT id, name, email, password_hash, role, is_active, biometric_enabled FROM users WHERE email = ?', [email]);
     const user = rows && rows[0];
     // Always respond with generic message on auth failures to avoid enumeration
     if (!user) {
@@ -51,6 +53,29 @@ router.post('/login', validateBody(loginSchema), async (req, res) => {
     }
     // success → clear any failure state
     loginLimiter.clear(req.ip || req.connection.remoteAddress || '0.0.0.0', email);
+    
+    // Check if biometric is required for this role (official/admin)
+    if (biometricService.requiresBiometric(user.role)) {
+      const tempToken = generateTempToken(user.id, user.email, user.role);
+      
+      if (!user.biometric_enabled) {
+        // User needs to enroll biometric first
+        return res.json({
+          requiresBiometricEnrollment: true,
+          tempToken,
+          user: { id: user.id, name: user.name, email: user.email, role: user.role }
+        });
+      } else {
+        // User needs to verify biometric
+        return res.json({
+          requiresBiometricVerification: true,
+          tempToken,
+          user: { id: user.id, name: user.name, email: user.email, role: user.role }
+        });
+      }
+    }
+    
+    // For citizens, issue token directly (no biometric required)
     const token = sign({ id: user.id, role: user.role, email: user.email });
     try {
       const { refreshToken, expiresAt } = await tokenService.createRefreshToken(user.id);

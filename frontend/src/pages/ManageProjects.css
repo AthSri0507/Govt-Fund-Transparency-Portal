@@ -17,6 +17,26 @@
 
 .manage-title { font-size: 26px; font-weight:700; color:var(--mp-deep); margin-bottom:18px }
 
+.mp-header-actions {
+  margin-bottom: 18px;
+}
+
+.mp-requests-link {
+  display: inline-block;
+  padding: 10px 16px;
+  background: #e8f4fd;
+  color: var(--mp-blue);
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.mp-requests-link:hover {
+  background: #d0e8fa;
+}
+
 .mp-filter-card {
   background: #fff;
   border-radius: 8px;
@@ -25,7 +45,7 @@
   margin-bottom: 20px;
   position: relative;
 }
-.mp-filter-card::before{ content: ''; position:absolute; left:0; right:0; top:0; height:4px; background: linear-gradient(90deg, #ff9933, #fff, #2e8b57); border-radius:8px 8px 0 0 }
+.mp-filter-card::before{ content: ''; position:absolute; left:12px; right:12px; top:0; height:3px; background: linear-gradient(to right, #FF9933, #FFFFFF, #138808); border-radius:8px 8px 0 0 }
 .mp-filter-title{ margin:0; font-size:18px; font-weight:700; color:var(--mp-deep) }
 .mp-filter-desc{ margin:6px 0 12px 0; color:var(--mp-muted); font-size:13px }
 .mp-filter-row{ display:flex; gap:12px }
@@ -36,7 +56,7 @@
 .mp-projects-list{ display:flex; flex-direction:column; gap:18px }
 
 .mp-card{ width:100%; background:#fff; border-radius:8px; box-shadow:0 6px 18px rgba(11,58,102,0.06); padding:20px; position:relative; overflow:visible }
-.mp-card-top{ height:6px; border-radius:6px 6px 0 0; background: linear-gradient(90deg, #ff9933, #ffffff 50%, #2e8b57) }
+.mp-card-top{ height:3px; margin:0 16px; border-radius:3px; background: linear-gradient(to right, #FF9933, #FFFFFF, #138808) }
 .mp-card-header{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px }
 .mp-title{ margin:0; font-size:20px; font-weight:700; color:var(--mp-deep) }
 .mp-badge-wrap{ margin-left:12px }
@@ -57,23 +77,39 @@
 .mp-input-small{ width:120px; padding:8px 10px; border:1px solid #e6eef6; border-radius:6px }
 .mp-input-flex{ flex:1; padding:8px 10px; border:1px solid #e6eef6; border-radius:6px }
 
-.mp-actions-row{ display:flex; justify-content:flex-end; align-items:center; gap:12px; margin-top:16px }
-.mp-actions-right{ display:flex; gap:12px; align-items:center }
+.mp-actions-row{ display:flex; justify-content:flex-end; align-items:center; margin-top:16px; padding-top:16px; border-top:1px solid #f0f4f8 }
+.mp-actions-right{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
 
-.mp-btn{ padding:8px 12px; min-width:102px; height:36px; border-radius:6px; border:1px solid transparent; cursor:pointer; font-weight:600; display:inline-flex; align-items:center; justify-content:center }
-.mp-btn-primary{ background:var(--mp-blue); color:white }
-.mp-btn-secondary{ background:#f3f6f9; color:var(--mp-deep); border:1px solid #e6eef6 }
+.mp-btn{ padding:8px 16px; height:36px; border-radius:6px; border:1px solid transparent; cursor:pointer; font-weight:500; display:inline-flex; align-items:center; justify-content:center; transition:all 0.2s; font-size:14px }
+.mp-btn-primary{ background:#0d6efd; color:white; box-shadow:0 2px 4px rgba(13,110,253,0.15) }
+.mp-btn-primary:hover{ background:#0b5ed7; box-shadow:0 4px 8px rgba(13,110,253,0.25) }
+.mp-btn-secondary{ background:#f8f9fa; color:#495057; border:1px solid #dee2e6 }
+.mp-btn-secondary:hover{ background:#e9ecef; border-color:#adb5bd }
 .mp-link-muted{ color:var(--mp-muted); text-decoration:underline }
-.mp-btn-tertiary{ background:#ffffff; color:var(--mp-deep); border:1px solid #dbe9f5 }
+.mp-btn-tertiary{ background:#ffffff; color:#0d6efd; border:1px solid #0d6efd }
+.mp-btn-tertiary:hover{ background:#e7f3ff; border-color:#0b5ed7 }
 
 /* Remove underlines for button-like links */
 .mp-btn, .mp-btn-edit, .mp-btn-primary, .mp-btn-secondary, .mp-btn-tertiary { text-decoration: none }
 
 .mp-badge { padding:6px 10px; border-radius:999px; font-weight:700 }
 
-/* Edit button style - placed before other actions */
-.mp-btn-edit{ background: white; color: var(--mp-blue); border: 1px solid var(--mp-blue); padding:8px 12px; border-radius:6px }
-.mp-btn-edit:hover{ background: rgba(11,95,165,0.06) }
+/* Edit button style - outlined primary */
+.mp-btn-edit{ background: white; color: #0d6efd; border: 1px solid #0d6efd; padding:8px 16px; border-radius:6px }
+.mp-btn-edit:hover{ background: #e7f3ff; border-color:#0b5ed7 }
+
+/* Request Help button */
+.mp-btn-request {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffc107;
+  padding: 8px 16px;
+  border-radius: 6px;
+}
+.mp-btn-request:hover {
+  background: #ffe69c;
+  border-color:#ffb800;
+}
 
 @media (max-width:900px){
   .mp-form-inline{ flex-direction:column; align-items:stretch }

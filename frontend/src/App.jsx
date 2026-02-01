@@ -23,6 +23,10 @@ import AdminDeletedProjects from './pages/AdminDeletedProjects'
 import AdminProjects from './pages/AdminProjects'
 import AdminFlaggedProjects from './pages/AdminFlaggedProjects'
 import AdminLayout from './layouts/AdminLayout'
+import PendingRequests from './pages/PendingRequests'
+import CompleteRequest from './pages/CompleteRequest'
+import BiometricEnrollment from './pages/BiometricEnrollment'
+import BiometricVerification from './pages/BiometricVerification'
 import { getToken, getUser, clearAll } from './utils/auth'
 
 function Protected({ children, allowedRoles }) {
@@ -49,12 +53,14 @@ export default function App() {
   return (
     <div>
       {!isAdminRoute && (
-        <Header variant={(location.pathname.startsWith('/login') || location.pathname.startsWith('/register') || location.pathname.startsWith('/forgot')) ? 'auth' : 'landing'} />
+        <Header variant={(location.pathname.startsWith('/login') || location.pathname.startsWith('/register') || location.pathname.startsWith('/forgot') || location.pathname.startsWith('/biometric')) ? 'auth' : 'landing'} />
       )}
       <main style={{ padding: 16 }}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/biometric-enroll" element={<BiometricEnrollment />} />
+          <Route path="/biometric-verify" element={<BiometricVerification />} />
           <Route path="/" element={<Landing />} />
           <Route path="/projects" element={<Protected><Home /></Protected>} />
           <Route path="/projects/:id" element={<Protected><ProjectDetail /></Protected>} />
@@ -67,6 +73,8 @@ export default function App() {
           <Route path="/dashboard/official/projects/:id/edit" element={<Protected allowedRoles={["Official"]}><EditProject /></Protected>} />
           <Route path="/dashboard/official/projects/:id/view" element={<Protected allowedRoles={["Official","Admin"]}><OfficialProjectView /></Protected>} />
           <Route path="/dashboard/official/projects" element={<Protected allowedRoles={["Official"]}><ManageProjects /></Protected>} />
+          <Route path="/dashboard/official/requests" element={<Protected allowedRoles={["Official"]}><PendingRequests /></Protected>} />
+          <Route path="/dashboard/official/requests/:id/complete" element={<Protected allowedRoles={["Official"]}><CompleteRequest /></Protected>} />
           <Route path="/dashboard/admin" element={<Protected allowedRoles={["Admin"]}><AdminLayout><DashboardAdmin /></AdminLayout></Protected>} />
           <Route path="/dashboard/admin/projects" element={<Protected allowedRoles={["Admin"]}><AdminLayout><AdminProjects /></AdminLayout></Protected>} />
           <Route path="/dashboard/admin/flagged" element={<Protected allowedRoles={["Admin"]}><AdminLayout><AdminFlaggedProjects /></AdminLayout></Protected>} />

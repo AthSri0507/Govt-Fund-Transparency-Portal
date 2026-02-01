@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { Link } from 'react-router-dom'
 import { getToken } from '../utils/auth'
+import CreateRequestModal from '../components/CreateRequestModal'
 import './ManageProjects.css'
 
 export default function ManageProjects() {
   const [projects, setProjects] = useState([])
   const [err, setErr] = useState(null)
   const [filterName, setFilterName] = useState('')
+  const [requestModal, setRequestModal] = useState(null)
 
   useEffect(() => {
     loadProjects()
@@ -54,6 +56,11 @@ export default function ManageProjects() {
     <div className="manage-container">
       <div className="mp-inner">
         <div className="manage-title">Manage Your Registered Projects</div>
+        <div className="mp-header-actions">
+          <Link to="/dashboard/official/requests" className="mp-requests-link">
+            View Collaboration Requests
+          </Link>
+        </div>
         {err && <div className="error-text">{err}</div>}
         <div className="mp-filter-card">
           <h3 className="mp-filter-title">Project Filters</h3>
@@ -102,6 +109,12 @@ export default function ManageProjects() {
                   <footer className="mp-actions-row">
                     <div className="mp-actions-right">
                       <Link to={`/dashboard/official/projects/${p.id}/edit`} className="mp-btn mp-btn-edit">Edit</Link>
+                      <button 
+                        className="mp-btn mp-btn-request" 
+                        onClick={() => setRequestModal({ id: p.id, name: p.name })}
+                      >
+                        Request Help
+                      </button>
                       {p.status !== 'Disabled' ? (
                         <button className="mp-btn mp-btn-secondary" onClick={async ()=>{
                           const ok = window.confirm('Disabling a project hides it from citizens. Are you sure you want to disable this project?')
@@ -133,6 +146,15 @@ export default function ManageProjects() {
             </div>
         </section>
       </div>
+      
+      {requestModal && (
+        <CreateRequestModal
+          projectId={requestModal.id}
+          projectName={requestModal.name}
+          onClose={() => setRequestModal(null)}
+          onCreated={() => setRequestModal(null)}
+        />
+      )}
     </div>
   )
 }

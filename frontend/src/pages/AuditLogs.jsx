@@ -192,7 +192,7 @@ export default function AuditLogs() {
         <div className="table-card">
           <table className="audit-table">
             <thead>
-              <tr><th>ID</th><th>Entity</th><th>Entity</th><th>Action</th><th>Actor</th><th>Details</th><th>When</th></tr>
+              <tr><th>ID</th><th>Entity</th><th>Project</th><th>Action</th><th>Actor</th><th>Details</th><th>Time Stamp</th></tr>
             </thead>
             <tbody>
               {logs.map(l => (

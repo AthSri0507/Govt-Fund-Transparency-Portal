@@ -1,0 +1,198 @@
+.pending-requests-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.pr-header {
+  margin-bottom: 24px;
+}
+
+.pr-header h1 {
+  font-size: 1.8rem;
+  color: #1a1a2e;
+  margin-bottom: 8px;
+}
+
+.pr-subtitle {
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.pr-error {
+  background: #fee;
+  border: 1px solid #fcc;
+  color: #c00;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.pr-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 0;
+}
+
+.pr-tab {
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #666;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: -2px;
+  font-weight: 500;
+}
+
+.pr-tab:hover {
+  color: #0d6efd;
+}
+
+.pr-tab.active {
+  color: #0d6efd;
+  border-bottom-color: #0d6efd;
+  font-weight: 600;
+}
+
+.pr-loading {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.pr-section h2 {
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 16px;
+}
+
+.pr-empty {
+  text-align: center;
+  padding: 40px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  color: #666;
+}
+
+.pr-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pr-card {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+  transition: box-shadow 0.2s;
+}
+
+.pr-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.06);
+}
+
+.pr-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.pr-card-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #1a1a2e;
+}
+
+.pr-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.pr-badge.pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.pr-badge.completed {
+  background: #d4edda;
+  color: #155724;
+}
+
+.pr-card-body {
+  padding: 20px;
+}
+
+.pr-card-body p {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+  color: #444;
+}
+
+.pr-card-body strong {
+  color: #333;
+}
+
+.pr-fields {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+.pr-fields strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.pr-fields ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.pr-fields li {
+  font-size: 0.85rem;
+  color: #666;
+  text-transform: capitalize;
+  margin-bottom: 4px;
+}
+
+.pr-card-footer {
+  padding: 16px 20px;
+  background: #fafafa;
+  border-top: 1px solid #e0e0e0;
+}
+
+.pr-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pr-btn.complete {
+  background: #0d6efd;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(13, 110, 253, 0.2);
+}
+
+.pr-btn.complete:hover {
+  background: #0b5ed7;
+  box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+  transform: translateY(-1px);
+}
