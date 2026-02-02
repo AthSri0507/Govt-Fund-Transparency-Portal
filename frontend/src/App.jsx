@@ -27,6 +27,7 @@ import PendingRequests from './pages/PendingRequests'
 import CompleteRequest from './pages/CompleteRequest'
 import BiometricEnrollment from './pages/BiometricEnrollment'
 import BiometricVerification from './pages/BiometricVerification'
+import GalleryPage from './pages/GalleryPage'
 import { getToken, getUser, clearAll } from './utils/auth'
 
 function Protected({ children, allowedRoles }) {
@@ -65,6 +66,7 @@ export default function App() {
           <Route path="/projects" element={<Protected><Home /></Protected>} />
           <Route path="/projects/:id" element={<Protected><ProjectDetail /></Protected>} />
           <Route path="/projects/:id/timeline" element={<Protected><ProjectTimeline /></Protected>} />
+          <Route path="/projects/:projectId/gallery" element={<Protected><GalleryPage /></Protected>} />
           <Route path="/dashboard/citizen" element={<Protected allowedRoles={["Citizen"]}><DashboardCitizen /></Protected>} />
           <Route path="/citizen/projects" element={<Protected allowedRoles={["Citizen"]}><Home /></Protected>} />
           <Route path="/citizen/comments" element={<Protected allowedRoles={["Citizen"]}><MyComments /></Protected>} />

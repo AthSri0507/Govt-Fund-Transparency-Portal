@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { getToken, getUser, setUserScopedItem, getUserScopedItem } from '../utils/auth'
 import ProjectMap from '../components/ProjectMap'
 // Removed duplicate import of React
@@ -326,7 +326,10 @@ export default function ProjectDetail({ initialOpenTimeline = false, forceCitize
                       )}
                     </div>
                     {summary && renderSentimentBadge(summary)}
-                    <div className="follow-wrapper" style={{ marginLeft: 'auto' }}><FollowButton projectId={project.id} /></div>
+                    <div className="follow-wrapper" style={{ marginLeft: 'auto', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <Link to={`/projects/${project.id}/gallery`} className="view-gallery-btn">📷 View Gallery</Link>
+                      <FollowButton projectId={project.id} />
+                    </div>
                   </div>
 
                   <div className="header-row2" style={{ marginTop: 12, display: 'flex', gap: 20 }}>
