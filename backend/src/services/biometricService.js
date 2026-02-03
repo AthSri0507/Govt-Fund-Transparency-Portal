@@ -8,7 +8,7 @@ const db = require('../db_mysql');
 
 // Similarity threshold for face matching (0.0 to 1.0)
 // Higher = stricter matching, Lower = more lenient
-const SIMILARITY_THRESHOLD = 0.85;
+const SIMILARITY_THRESHOLD = 0.65;
 
 /**
  * Calculate cosine similarity between two embedding vectors
@@ -149,12 +149,27 @@ function requiresBiometric(role) {
   return normalizedRole === 'official' || normalizedRole === 'admin';
 }
 
+/**
+ * Reset biometric data for a user (admin function)
+ * Clears face embedding and disables biometric so user can re-enroll
+ * @param {number} userId - User ID
+ * @returns {Promise<boolean>} Success status
+ */
+async function resetBiometric(userId) {
+  await db.query(
+    'UPDATE users SET face_embedding = NULL, biometric_enabled = FALSE WHERE id = ?',
+    [userId]
+  );
+  return true;
+}
+
 module.exports = {
   storeEmbedding,
   getStoredEmbedding,
   verifyEmbedding,
   isBiometricEnabled,
   requiresBiometric,
+  resetBiometric,
   validateEmbedding,
   cosineSimilarity,
   SIMILARITY_THRESHOLD

@@ -75,6 +75,20 @@ export default function UsersAdmin() {
     }
   }
 
+  async function resetBiometric(id, userName, setLocalErr) {
+    setLocalErr(null)
+    try {
+      const ok = window.confirm(`Are you sure you want to reset biometric data for ${userName}?\nThis will allow them to re-enroll their face.`)
+      if (!ok) return
+      const token = getToken()
+      await axios.post(`/api/admin/users/${id}/reset-biometric`, {}, { headers: { Authorization: `Bearer ${token}` } })
+      alert('Biometric reset successful. User can now re-enroll.')
+      await loadUsers()
+    } catch (e) {
+      setLocalErr(e.response?.data?.message || e.message)
+    }
+  }
+
   return (
     <div className="admin-user-page">
       <div className="admin-user-inner">
@@ -124,7 +138,7 @@ export default function UsersAdmin() {
                   }
                   return true;
                 }).map(u => (
-                  <UserRow key={u.id} user={u} changeRole={changeRole} deactivate={deactivate} />
+                  <UserRow key={u.id} user={u} changeRole={changeRole} deactivate={deactivate} resetBiometric={resetBiometric} />
                 ))}
               </tbody>
             </table>
@@ -135,9 +149,12 @@ export default function UsersAdmin() {
   )
 }
 
-function UserRow({ user, changeRole, deactivate }) {
+function UserRow({ user, changeRole, deactivate, resetBiometric }) {
   const [localErr, setLocalErr] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+  
+  // Check if user role requires biometric (official or admin)
+  const requiresBiometric = ['official', 'admin'].includes(String(user.role).toLowerCase())
 
   return (
     <tr className="user-row">
@@ -147,6 +164,11 @@ function UserRow({ user, changeRole, deactivate }) {
       <td className="td-cell">{user.role}</td>
       <td className="td-cell">
         <span className={`status-badge ${user.is_active ? 'active' : 'disabled'}`}>{user.is_active ? 'Active' : 'Disabled'}</span>
+        {requiresBiometric && (
+          <span className={`status-badge biometric ${user.biometric_enabled ? 'enrolled' : 'not-enrolled'}`} style={{ marginLeft: '4px' }}>
+            {user.biometric_enabled ? '🔐 Biometric' : '⚠️ No Biometric'}
+          </span>
+        )}
       </td>
       <td className="td-cell">
         <div className="actions-cell">
@@ -162,6 +184,16 @@ function UserRow({ user, changeRole, deactivate }) {
               <span className="info-tooltip" role="tooltip">Disabling prevents login and activity</span>
             </button>
           </div>
+          {requiresBiometric && (
+            <button 
+              className="action-button reset-biometric-btn" 
+              onClick={async ()=>{ setSubmitting(true); setLocalErr(null); await resetBiometric(user.id, user.name, setLocalErr); setSubmitting(false); }} 
+              disabled={submitting}
+              title="Reset biometric to allow re-enrollment"
+            >
+              Reset Biometric
+            </button>
+          )}
         </div>
         {localErr && <div className="local-error">{localErr}</div>}
       </td>

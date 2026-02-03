@@ -20,12 +20,17 @@
 .status-badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:13px}
 .status-badge.active{background:#ddf7e8;color:#06623a}
 .status-badge.disabled{background:#f3f4f6;color:#6b7280}
+.status-badge.biometric{font-size:11px;padding:4px 8px}
+.status-badge.biometric.enrolled{background:#e0f2fe;color:#0369a1}
+.status-badge.biometric.not-enrolled{background:#fef3c7;color:#92400e}
 
 .actions-cell{display:flex;align-items:center;gap:10px;white-space:nowrap}
 .role-select{padding:8px 10px;border-radius:6px;border:1px solid #d6dde6;background:#fff;height:36px;line-height:18px}
 .role-select{transform:translateY(5px)}
 .action-button{padding:8px 10px;border-radius:6px;border:1px solid #c7ced4;background:#fff;cursor:pointer;height:36px;line-height:18px}
 .action-button:disabled{opacity:0.6}
+.action-button.reset-biometric-btn{background:#fef3c7;border-color:#f59e0b;color:#92400e}
+.action-button.reset-biometric-btn:hover{background:#fde68a}
 .action-button-wrap{display:flex;flex-direction:row;align-items:center;gap:8px}
 .action-help{font-size:11px;color:#6b7280;margin-top:6px}
 .local-error{color:#b91c1c;margin-top:8px}

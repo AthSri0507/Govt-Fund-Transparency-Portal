@@ -1,13 +1,14 @@
 const express = require('express');
 const db = require('../db_mysql');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const biometricService = require('../services/biometricService');
 
 const router = express.Router();
 
 // GET /admin/users - list users (admin only)
 router.get('/users', requireAuth, requireRole('admin'), async (req, res) => {
   try {
-    const rows = await db.query('SELECT id, name, email, role, is_active, created_at FROM users ORDER BY id DESC');
+    const rows = await db.query('SELECT id, name, email, role, is_active, biometric_enabled, created_at FROM users ORDER BY id DESC');
     return res.json({ data: rows });
   } catch (err) {
     console.error('admin/users list error', err);
@@ -203,6 +204,39 @@ router.get('/stats', requireAuth, requireRole('admin'), async (req, res) => {
     } });
   } catch (err) {
     console.error('admin/stats error', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// POST /admin/users/:id/reset-biometric - reset biometric data for a user (admin only)
+router.post('/users/:id/reset-biometric', requireAuth, requireRole('admin'), async (req, res) => {
+  const id = Number(req.params.id);
+  if (!id) return res.status(400).json({ message: 'Invalid user id' });
+  try {
+    // Check if user exists and get their role
+    const rows = await db.query('SELECT id, name, email, role, biometric_enabled FROM users WHERE id = ?', [id]);
+    const user = rows && rows[0];
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Only allow reset for roles that require biometric (official/admin)
+    if (!biometricService.requiresBiometric(user.role)) {
+      return res.status(400).json({ message: 'Biometric reset not applicable for this role' });
+    }
+    
+    // Reset biometric
+    await biometricService.resetBiometric(id);
+    
+    // Log audit entry
+    await db.query(
+      'INSERT INTO audit_log (entity_type, entity_id, action, details, actor_id) VALUES (?,?,?,?,?)',
+      ['user', id, 'BIOMETRIC_RESET', JSON.stringify({ user_name: user.name, user_email: user.email, reset_by: req.user.id }), req.user.id]
+    );
+    
+    return res.json({ message: 'Biometric reset successful. User can now re-enroll.' });
+  } catch (err) {
+    console.error('admin/users reset-biometric error', err);
     return res.status(500).json({ message: 'Server error' });
   }
 });

@@ -107,7 +107,7 @@ router.post(
 
       // Log audit entry
       await db.query(
-        `INSERT INTO audit_log (user_id, action, target_type, target_id, details) 
+        `INSERT INTO audit_log (actor_id, action, entity_type, entity_id, details) 
          VALUES (?, ?, ?, ?, ?)`,
         [
           requestedBy,
@@ -388,7 +388,7 @@ router.post(
 
       // Log audit entry
       await conn.execute(
-        `INSERT INTO audit_log (user_id, action, target_type, target_id, details) 
+        `INSERT INTO audit_log (actor_id, action, entity_type, entity_id, details) 
          VALUES (?, ?, ?, ?, ?)`,
         [
           userId,
