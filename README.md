@@ -431,6 +431,9 @@ For issues, questions, or suggestions:
 
 ## Screenshots & Demo
 
+### Project Location Map
+![Landing Page](doc/image/land.png)
+
 ### Citizen Dashboard
 ![Citizen View](doc/image/cit.png)
 
@@ -440,8 +443,7 @@ For issues, questions, or suggestions:
 ### Admin Dashboard
 ![Admin View](doc/image/admin.png)
 
-### Project Location Map
-![Land/Map View](doc/image/land.png)
+
 
 ---
 
