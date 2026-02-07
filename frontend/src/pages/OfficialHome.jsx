@@ -11,6 +11,7 @@ export default function OfficialHome() {
   const navigate = useNavigate()
   const user = getUser()
   const [statusCounts, setStatusCounts] = React.useState([])
+  const [pendingRequestsCount, setPendingRequestsCount] = React.useState(0)
   const [err, setErr] = React.useState(null)
 
   React.useEffect(()=>{
@@ -31,6 +32,28 @@ export default function OfficialHome() {
       }
     }
     load()
+    return ()=>{ cancelled = true }
+  }, [])
+
+  // Fetch pending requests count
+  React.useEffect(()=>{
+    let cancelled = false
+    async function loadPendingRequests(){
+      try{
+        const token = getToken()
+        if (!token) return
+        const res = await fetch('/api/project-requests/pending', {
+          headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
+        })
+        const json = await res.json().catch(() => ({}))
+        if (cancelled) return
+        const data = json.data || []
+        setPendingRequestsCount(data.length)
+      }catch(e){
+        console.error('pending requests load', e)
+      }
+    }
+    loadPendingRequests()
     return ()=>{ cancelled = true }
   }, [])
 
@@ -102,30 +125,46 @@ export default function OfficialHome() {
             </div>
           </section>
 
-          <section className="do-card do-projects" aria-labelledby="status-overview">
-            <h2 id="status-overview" className="do-card-title">Project Status Overview</h2>
-            <div className="do-project-status">
-              <div className="do-project-status-chart">
-                <ProjectStatusPie data={statusCounts} />
-              </div>
-              <div className="do-project-status-legend">
-                {(!statusCounts || statusCounts.length === 0) && (
-                  <div className="do-muted">
-                    <div>No project status information available.</div>
-                    <div>Project analytics will appear once data is recorded.</div>
-                  </div>
-                )}
-                {statusCounts.map((s,i)=>{
-                  const label = s && s.status && s.status.length ? s.status : 'Unknown'
-                  return (
-                    <div key={i} className="do-status-row">
-                      <strong className={label === 'Unknown' ? 'do-status-unknown' : ''}>{label}</strong>: {s.count}
+          <div className="do-overview-grid">
+            <section className="do-card do-projects" aria-labelledby="status-overview">
+              <h2 id="status-overview" className="do-card-title">Project Status Overview</h2>
+              <div className="do-project-status">
+                <div className="do-project-status-chart">
+                  <ProjectStatusPie data={statusCounts} />
+                </div>
+                <div className="do-project-status-legend">
+                  {(!statusCounts || statusCounts.length === 0) && (
+                    <div className="do-muted">
+                      <div>No project status information available.</div>
+                      <div>Project analytics will appear once data is recorded.</div>
                     </div>
-                  )
-                })}
+                  )}
+                  {statusCounts.map((s,i)=>{
+                    const label = s && s.status && s.status.length ? s.status : 'Unknown'
+                    return (
+                      <div key={i} className="do-status-row">
+                        <strong className={label === 'Unknown' ? 'do-status-unknown' : ''}>{label}</strong>: {s.count}
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+
+            <section 
+              className="do-card do-pending-requests" 
+              aria-labelledby="pending-requests"
+              onClick={() => navigate('/dashboard/official/requests')}
+              style={{ cursor: 'pointer' }}
+            >
+              <h2 id="pending-requests" className="do-card-title">Pending Requests</h2>
+              <div className="do-pending-content">
+                <div className="do-pending-count">{pendingRequestsCount}</div>
+                <div className="do-pending-label">collaboration requests awaiting your response</div>
+                <div className="do-pending-action">Click to view and manage →</div>
+              </div>
+            </section>
+          </div>
         </main>
       </div>
     </div>

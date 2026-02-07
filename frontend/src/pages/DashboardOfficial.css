@@ -52,8 +52,56 @@
 .do-quick-btn{background:#fff; border:1px solid #cfdde6; padding:8px 10px; border-radius:6px; font-weight:700; color:var(--gov-navy); cursor:pointer}
 .do-quick-btn:hover{background:#f7fbff}
 
+/* Overview Grid - Project Status and Pending Requests side by side */
+.do-overview-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-top:16px;
+}
+.do-overview-grid .do-card{
+  margin-top:0;
+}
+
+/* Pending Requests Card */
+.do-pending-requests{
+  transition:box-shadow 0.2s ease, transform 0.2s ease;
+}
+.do-pending-requests:hover{
+  box-shadow:0 8px 24px rgba(11,60,93,0.12);
+  transform:translateY(-2px);
+}
+.do-pending-content{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:160px;
+  text-align:center;
+}
+.do-pending-count{
+  font-size:48px;
+  font-weight:800;
+  color:var(--gov-navy);
+  line-height:1;
+}
+.do-pending-label{
+  color:var(--gov-muted);
+  margin-top:8px;
+  font-size:14px;
+}
+.do-pending-action{
+  margin-top:16px;
+  color:var(--gov-navy);
+  font-weight:600;
+  font-size:14px;
+}
+
 /* Responsive */
 @media (max-width:900px){
   .do-container{flex-direction:column}
   .do-sidebar{width:100%}
+  .do-overview-grid{
+    grid-template-columns:1fr;
+  }
 }

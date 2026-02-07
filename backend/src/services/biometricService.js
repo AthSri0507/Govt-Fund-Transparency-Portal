@@ -8,7 +8,7 @@ const db = require('../db_mysql');
 
 // Similarity threshold for face matching (0.0 to 1.0)
 // Higher = stricter matching, Lower = more lenient
-const SIMILARITY_THRESHOLD = 0.65;
+const SIMILARITY_THRESHOLD = 0.25;
 
 /**
  * Calculate cosine similarity between two embedding vectors

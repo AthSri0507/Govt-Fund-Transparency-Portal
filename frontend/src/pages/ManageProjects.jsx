@@ -82,8 +82,6 @@ export default function ManageProjects() {
               .filter(p => !filterName || String(p.name || '').toLowerCase().includes(filterName.trim().toLowerCase()))
               .map(p => (
               <article key={p.id} className="mp-card">
-                  <div className="mp-card-top" />
-
                   <header className="mp-card-header">
                     <h4 className="mp-title">{p.name}</h4>
                     <div className="mp-badge-wrap">

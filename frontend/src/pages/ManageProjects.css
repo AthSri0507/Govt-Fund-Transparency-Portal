@@ -56,7 +56,7 @@
 .mp-projects-list{ display:flex; flex-direction:column; gap:18px }
 
 .mp-card{ width:100%; background:#fff; border-radius:8px; box-shadow:0 6px 18px rgba(11,58,102,0.06); padding:20px; position:relative; overflow:visible }
-.mp-card-top{ height:3px; margin:0 16px; border-radius:3px; background: linear-gradient(to right, #FF9933, #FFFFFF, #138808) }
+.mp-card::before{ content: ''; position:absolute; left:0; right:0; top:0; height:3px; background: linear-gradient(to right, #FF9933, #FFFFFF, #138808); border-radius:8px 8px 0 0 }
 .mp-card-header{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px }
 .mp-title{ margin:0; font-size:20px; font-weight:700; color:var(--mp-deep) }
 .mp-badge-wrap{ margin-left:12px }
@@ -70,17 +70,17 @@
 .mp-forms-row{ display:flex; gap:12px; margin-top:14px }
 .mp-forms-left, .mp-forms-right{ flex:1 }
 
-.mp-fund-row{ margin-top:14px }
-.mp-update-row{ margin-top:12px }
+.mp-fund-row{ margin-top:8px }
+.mp-update-row{ margin-top:6px }
 
 .mp-form-inline{ display:flex; gap:8px; align-items:center }
 .mp-input-small{ width:120px; padding:8px 10px; border:1px solid #e6eef6; border-radius:6px }
 .mp-input-flex{ flex:1; padding:8px 10px; border:1px solid #e6eef6; border-radius:6px }
 
 .mp-actions-row{ display:flex; justify-content:flex-end; align-items:center; margin-top:16px; padding-top:16px; border-top:1px solid #f0f4f8 }
-.mp-actions-right{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
+.mp-actions-right{ display:flex; gap:8px; align-items:center; flex-wrap:nowrap }
 
-.mp-btn{ padding:8px 16px; height:36px; border-radius:6px; border:1px solid transparent; cursor:pointer; font-weight:500; display:inline-flex; align-items:center; justify-content:center; transition:all 0.2s; font-size:14px }
+.mp-btn{ padding:6px 12px; height:34px; border-radius:6px; border:1px solid transparent; cursor:pointer; font-weight:500; display:inline-flex; align-items:center; justify-content:center; transition:all 0.2s; font-size:13px; white-space:nowrap }
 .mp-btn-primary{ background:#0d6efd; color:white; box-shadow:0 2px 4px rgba(13,110,253,0.15) }
 .mp-btn-primary:hover{ background:#0b5ed7; box-shadow:0 4px 8px rgba(13,110,253,0.25) }
 .mp-btn-secondary{ background:#f8f9fa; color:#495057; border:1px solid #dee2e6 }
@@ -95,7 +95,7 @@
 .mp-badge { padding:6px 10px; border-radius:999px; font-weight:700 }
 
 /* Edit button style - outlined primary */
-.mp-btn-edit{ background: white; color: #0d6efd; border: 1px solid #0d6efd; padding:8px 16px; border-radius:6px }
+.mp-btn-edit{ background: white; color: #0d6efd; border: 1px solid #0d6efd; padding:8px 16px; border-radius:6px; align-self:flex-end; margin-top:4px }
 .mp-btn-edit:hover{ background: #e7f3ff; border-color:#0b5ed7 }
 
 /* Request Help button */
@@ -105,10 +105,18 @@
   border: 1px solid #ffc107;
   padding: 8px 16px;
   border-radius: 6px;
+  align-self:flex-start;
+  margin-top:4px;
 }
 .mp-btn-request:hover {
   background: #ffe69c;
   border-color:#ffb800;
+}
+
+/* Disable button alignment */
+.mp-btn-secondary {
+  align-self: flex-start;
+  margin-top: 4px;
 }
 
 @media (max-width:900px){
