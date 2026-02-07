@@ -114,9 +114,8 @@ A role-based web application for transparent monitoring of government project fu
 │   │   ├── styles/           # Global styles
 │   │   └── utils/            # Utility functions
 │   └── vite.config.mjs       # Vite configuration
-├── doc/                       # Documentation
-│   └── image/                # Screenshot and demo images
-└── infra-docs/               # Infrastructure documentation
+└── doc/                       # Documentation
+    └── image/                # Screenshot and demo images
 ```
 
 ## Getting Started
@@ -338,7 +337,7 @@ The API follows RESTful conventions. Base URL: `/api`
 - `GET /projects/:id/sentiment` - Get sentiment analysis
 - `GET /dashboard` - Get analytics dashboard
 
-For complete API documentation, refer to [ProjectDetails/requirement.md](ProjectDetails/requirement.md).
+For complete API documentation, see the API Overview section above.
 
 ## Database Schema
 
@@ -376,7 +375,7 @@ For complete API documentation, refer to [ProjectDetails/requirement.md](Project
 - Stores raw citizen comments for sentiment analysis
 - Used by background workers to generate sentiment summaries
 
-For detailed schema including constraints and relationships, see [backend/migrations/](/backend/migrations/).
+All database migrations are automated through the `npm run migrate` command.
 
 
 ### Running Tests
@@ -421,8 +420,7 @@ npm test -- --watch
 ### Getting Help
 
 For issues, questions, or suggestions:
-
-1. Review test cases in [backend/test/](backend/test/) for usage examples
+1. Run tests with `npm test` to verify your setup
 2. Open an issue with detailed description of the problem
 3. Include relevant logs and environment information
 
@@ -431,18 +429,25 @@ For issues, questions, or suggestions:
 
 ## Screenshots & Demo
 
-### Project Location Map
+### Landing Page & Project Location Map
+Interactive map displaying all government projects across India with geospatial filters.
+
 ![Landing Page](doc/image/land.png)
 
 ### Citizen Dashboard
-![Citizen View](doc/image/cit.png)
+Citizens can browse projects, submit feedback, and view sentiment analysis of community responses.
+
+![Citizen View](doc/image/citizen.png)
 
 ### Official Dashboard
+Officials manage project details, track fund utilization, and post progress updates.
+
 ![Official View](doc/image/off.png)
 
 ### Admin Dashboard
-![Admin View](doc/image/admin.png)
+Administrators manage users, review audit logs, and flag or delete problematic projects.
 
+![Admin View](doc/image/admin.png)
 
 
 ---
