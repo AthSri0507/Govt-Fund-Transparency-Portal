@@ -429,8 +429,8 @@ For issues, questions, or suggestions:
 
 ## Screenshots & Demo
 
-### Landing Page & Project Location Map
-Interactive map displaying all government projects across India with geospatial filters.
+### Landing Page 
+Landing Page of the Government Fund Transparency Portal.
 
 ![Landing Page](doc/image/land.png)
 
